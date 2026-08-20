@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mortgage Observation & Response Assistant</title>
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 30px;
+    background-color: #0d0d0d;
+    color: #e0e0e0;
+}
+
+/* TITULO PRINCIPAL M.O.R.A PROJECT */
+h2 {
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, #fff7ad 0%, #ffd700 50%, #c59b27 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0px 0px 15px rgba(255, 215, 0, 0.4);
+    margin-bottom: 25px;
+    text-transform: uppercase;
+}
+
+.controls-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+#btn-start {
+    background: linear-gradient(135deg, #ffd700, #b8860b);
+    color: #000;
+    font-weight: bold;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0px 4px 10px rgba(255, 215, 0, 0.2);
+    transition: all 0.3s ease;
+}
+#btn-start:hover {
+    background: linear-gradient(135deg, #ffe44d, #d4af37);
+    transform: translateY(-2px);
+    box-shadow: 0px 6px 15px rgba(255, 215, 0, 0.4);
+}
+
+#btn-reset {
+    background: linear-gradient(135deg, #00bcd4, #007a87);
+    color: #fff;
+    font-weight: bold;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0px 4px 10px rgba(0, 188, 212, 0.2);
+    transition: all 0.3s ease;
+}
+#btn-reset:hover {
+    background: linear-gradient(135deg, #33d0e1, #0097a7);
+    transform: translateY(-2px);
+    box-shadow: 0px 6px 15px rgba(0, 188, 212, 0.4);
+}
+
+#lang-select {
+    background-color: #1a1a1a;
+    color: #ffd700;
+    border: 1px solid #ffd700;
+    padding: 11px 15px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    outline: none;
+}
+
+#status {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+/* CAJA DE TRANSCRIPCIÓN Y RESALTADO */
+label {
+    font-weight: bold;
+    color: #aaa;
+    display: block;
+    margin-bottom: 5px;
+}
+
+#transcript-box {
+    width: 100%;
+    height: 160px;
+    background-color: #141414;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 16px;
+    line-height: 1.5;
+    overflow-y: auto;
+    box-sizing: border-box;
+    box-shadow: inset 0px 2px 5px rgba(0,0,0,0.8);
+}
+
+/* CLASE PARA RESALTAR TRIGGERS */
+mark.highlight-trigger {
+    background-color: #ffee00;
+    color: #000;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 3px;
+    box-shadow: 0px 0px 8px rgba(255, 238, 0, 0.8);
+}
+
+#result, #empathy-result {
+    margin-top: 15px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#bsd-suggestion {
+    margin-top: 15px;
+    padding: 15px;
+    border: 1px dashed #ffeb3b;
+    border-radius: 8px;
+    background-color: #141814;
+    font-size: 18px;
+    font-weight: bold;
+    color: #00e676;
+    display: none;
+}
+
+#alerta {
+    margin-top: 15px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.red { color: #ff4d4d; }
+.green { color: #4CAF50; }
+.yellow { color: #ffeb3b; }
+.gray { color: #aaa; margin-top: 10px; }
+
+/* BRANDING MODER ESTILIZADO */
+#moder {
+    position: fixed;
+    bottom: 15px;
+    left: 20px;
+    font-size: 36px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(180deg, #ffe066 0%, #d4af37 50%, #8a6d1c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0px 2px 8px rgba(212, 175, 55, 0.5));
+    user-select: none;
+}
+</style>
+</head>
+<body>
+
+<h2>M.O.R.A PROJECT</h2>
+
+<div class="controls-container">
+    <button id="btn-start">🎤 Start MORA</button>
+    <button id="btn-reset">🔄 Restart MORA</button>
+    <select id="lang-select">
+        <option value="en">🇺🇸 English</option>
+        <option value="es">🇲🇽 Español</option>
+    </select>
+</div>
+
+<div id="status">Press the button to start MORA...</div>
+
+<label>I am listening attentively.:</label>
+<div id="transcript-box"></div>
+
+<div id="result"></div>
+<div id="empathy-result"></div>
+<div id="bsd-suggestion"></div>
+<div id="alerta"></div>
+<div id="debug" class="gray"></div>
+
+<div id="moder">MODER</div>
+
+<script>
+// ==========================================
+// 1. CONFIGURACIÓN DE DEEPGRAM
+// ==========================================
+const DEEPGRAM_API_KEY = "6ac125a3e51eb51126c7636b1f1477b4480b068b"; 
+
+var socket = null;
+var mediaRecorder = null;
+var mediaStream = null;
+var isListening = false;
+var fullTranscriptHistory = "";
+
+// DICCIONARIO BASE DE COMPLAINTS
+var glossary = [
+    // --- FRASES COMPUESTAS / CONTRACCIONES (INGLÉS Y ESPAÑOL) ---
+    "don't understand", "dont understand", "do not understand", "doesn't make sense", "doesnt make sense",
+    "cannot afford", "can't afford", "cant afford", "can't pay", "cant pay", "unable to pay",
+    "talking to my lawyer", "talk to my lawyer", "speaking with my attorney", "never received",
+    "no entiendo", "no le entiendo", "no entiendo nada", "no tiene sentido", "no puedo pagar",
+    "no me alcanza", "voy a hablar con mi abogado", "hablare con mi abogado", "nunca recibi",
+    "nunca me llego", "me estan robando", "son unos rateros", "es una estafa",
+
+    // --- PALABRAS INDIVIDUALES EXISTENTES ---
+    "angry","upset","frustrated","unhappy","disappointed","bad","terrible","unacceptable","wrong","incorrect",
+    "unable","again","several","late","increase","fee","credit","report","bureau","reported","complaint","cfpb",
+    "attorney","lawsuit","legal","supervisor","dissatisfaction","abuse","abusive","defraud","frb","mistreat",
+    "accuse","demand","ftc","negative","treated badly","agency","deplorable","furious","nightmare","transphobic",
+    "doi","harass","harassment","occ","tricked","annoy","disappoint","offended","udfi","appalled","discontent",
+    "hateful","pain","pain point","discriminate","discrimination","discriminatory","homophobic","poorly","unfair",
+    "attorney general","disgrace","horrible","predatory","awful","disgruntled","horrid","pressured","unlawful",
+    "bait","dishonest","inappropriate","racism","unreasonable","bbb","displease","incompetent","rebuttal","bigotry",
+    "disrespectful","regulation","regulator","regulatory","violate","violation","bogus","dissatisfied","inexcusable",
+    "ridiculous","break the law","disturb","irate","rude","worse","worst","dreadful","insults","scam","duped",
+    "lawyer","sec","cheat","egregious","letter of apology","sexist","closing account","fail","lie","lying","sucks",
+    "complain","falsely","litigate","litigation","sue","sued","suing","compromised","fine print","lost confidence",
+    "suit","cruel","finra","miserable","swear","curse words","deceive","deceptive","mislead","misleading","misled",
+    "targeted","targeting","damn","hell","crap","shoot","heck","dang","freaking","freakin","what the hell","goddamn",
+    "goddammit","dammit","oh my god","jesus christ","shit","bullshit","horseshit","batshit","shitshow","shithead",
+    "shitty","shitbag","shitface","no shit","holy shit","piss","pissed","pissed off","pissing","piss off","pisshead",
+    "ass","dumbass","smartass","jackass","badass","asshole","asshat","assbag","assclown","asswipe","bastard","lazy bastard",
+    "dirty bastard","bitch","bitchy","son of a bitch","dumb bitch","crazy bitch","screw","screwed","screw up","screw you",
+    "crappy","trash","garbage","this sucks","fuck","fucking","fucked","fuck up","fuck off","fuck you","fuck this","fuck that",
+    "fuck it","fuckface","fucker","motherfucker","dumbfuck","dick","dickhead","dickface","dickwad","prick","jerk","idiot",
+    "moron","stupid","stupid idiot","piece of shit","douche","douchebag","tool","loser","clown","wtf","what the fuck",
+    "are you kidding me","what is this shit","son of a gun","pain in the ass","go to hell","shut up","shut the hell up",
+    "shut the fuck up","screw this","this is bullshit","this is crap","this is shit","this is ridiculous","this is insane",
+    "this is stupid","this is messed up","this is wrong","you messed up","you screwed me","you lied","you failed",
+    "you don't care","unbelievable","absurd","outrageous","annoying","infuriating","frustration","molesto","enojado",
+    "frustrado","insatisfecho","decepcionado","frustracion","malo","pesimo","incorrecto","reporte","buro","queja",
+    "reclamo","abogado","demanda","insatisfaccion","abuso","abusivo","defraudar","maltratar","acusar","exigir",
+    "tratado mal","pesadilla","transfobico","acosar","acoso","enganado","molestar","decepcionar","ofendido",
+    "indignado","descontento","odioso","dolor","punto de dolor","inaceptable","discriminar","discriminacion",
+    "discriminatorio","homofobico","mal","injusto","fiscal general","desgracia","depredador","infeliz","horrendo",
+    "disgustado","presionado","ilegal","asco","problema","poco profesional","anzuelo","deshonesto","inapropiado",
+    "racismo","irrazonable","disgustar","incompetente","refutacion","fanatismo","irrespetuoso","regulacion",
+    "regulador","regulatorio","violar","violacion","falso","inexcusable","ridiculo","violar la ley","perturbar",
+    "iracundo","grosero","peor","el peor","insultos","estafa","equivocado","hacer trampa","atroz","carta de disculpa",
+    "sexista","cerrar cuenta","fallar","mentir","mintiendo","apesta","quejarse","falsamente","litigar","litigio",
+    "denunciar","demandado","demandando","comprometido","letra pequena","perdida de confianza","cruel","miserable",
+    "groserias","palabras vulgares","enganar","enganoso","inducir a error","dirigido","dirigiendo","maldita sea",
+    "infierno","porqueria","carajo","diablos","rayos","maldito","que demonios","maldito dios","dios mio","jesucristo",
+    "mierda","mierda absoluta","locura","desaster","de mierda","basura de persona","cara de mierda","ni hablar",
+    "mierda santa","orinar","muy enojado","vete al diablo","trasero","sabelotodo","imbecil","malote","basura","payaso",
+    "bastardo","bastardo flojo","bastardo sucio","perra","odiosa","hijo de perra","perra estupida","perra loca","joder",
+    "jodido","arruinar","jodete","esto apesta","vete a la mierda","joder esto","joder eso","me importa una mierda",
+    "cara de idiota","cabron","hijo de puta","estupido","idiota estupido","pedazo de mierda","bolsa de imbecil",
+    "herramienta","perdedor","que carajos","me estas tomando el pelo","que es esta mierda","hijo de la gran",
+    "dolor en el trasero","vete al infierno","callate","callate al demonio","callate la mierda","a la mierda con esto",
+    "esto es mierda","esto es porqueria","esto es ridiculo","esto es una locura","esto es estupido","esto esta mal hecho",
+    "esto esta mal","la arruinaste","me arruinaste","mentiste","fallaste","no te importa","increible","indignante",
+    "frustrante","enojo","enfurecedor","violando","puta","puto"
+];
+
+var empathyPhrases = [
+    "i apologize for the inconvenience", "i am sorry for the frustration", "sorry for the inconvenience",
+    "apologize for the inconvenience", "sincerely apologize", "sorry for any confusion",
+    "apologize for the misunderstanding", "regret the inconvenience", "sorry for the delay",
+    "pido disculpas por los inconvenientes", "lamento mucho esta situacion", "disculpe la demora",
+    "gracias por su paciencia", "lamento cualquier confusion", "le ofrezco una disculpa",
+    "lamento la frustracion", "sinceras disculpas", "completely understand", "understand your concern",
+    "understand why you would feel frustrated", "see why this would be upsetting",
+    "understand the importance", "appreciate the opportunity", "entiendo completamente",
+    "comprendo por que", "reconozco la importancia", "sus preocupaciones son validas"
+];
+
+var empathyKeywords = [
+    "apologize", "apology", "apologise", "sorry", "inconvenience", "inconvenient",
+    "frustration", "frustrated", "disculpas", "disculpe", "disculpa", "lamento", "lamentamos",
+    "inconvenientes", "inconveniente", "frustracion", "entiendo", "comprendo"
+];
+
+// REGLAS BSD AMPLIADAS
+var bsdRules = [
+    { code: "BSDFRD", label: "Fraud", keywords: ["fraud", "identity theft", "stolen", "scam", "fraude", "robo de identidad", "usurpacion"] },
+    { code: "BSDBNK", label: "Bankruptcy Issue Resolved", keywords: ["bankrupt", "bankruptcy", "chapter 7", "chapter 13", "bancarrota", "quiebra"] },
+    { code: "BSDFOR", label: "Foreclosure Issue Resolved", keywords: ["foreclosure", "sheriff sale", "seizure", "ejecucion hipotecaria", "embargo"] },
+    { code: "BSDCBR", label: "Credit Report Issue Resolved", keywords: ["credit report", "credit bureau", "equifax", "experian", "transunion", "reporte de credito", "buro de credito"] },
+    { code: "BSDACH", label: "ACH Issue Resolved", keywords: ["ach", "direct debit", "auto pay", "automatic payment", "debito automatico", "retiro automatico", "pago automatico"] },
+    { code: "BSDFEE", label: "Fee Issue Resolved", keywords: ["fee", "late fee", "charge", "penalty", "cargo", "tarifa", "comision", "multa", "cobro indebido"] },
+    { code: "BSDTAX", label: "Taxes Issues Resolved", keywords: ["tax", "taxes", "property tax", "1098", "impuesto", "impuestos", "contribuciones"] },
+    { code: "BSDINS", label: "Insurance Issue Resolved", keywords: ["insurance", "hazard insurance", "flood insurance", "policy", "seguro", "poliza", "aseguradora"] },
+    { code: "BSDESC", label: "Escrow Issue Resolved", keywords: ["escrow", "escrow account", "escrow shortage", "caja de ahorro"] },
+    { code: "BSDLOS", label: "Loss Mitigation Issue Resolved", keywords: ["loss mitigation", "loan modification", "forbearance", "workout plan", "modificacion de prestamo", "mitigacion de perdida"] },
+    { code: "BSDMIP", label: "MIP/PMI Issue Resolved", keywords: ["pmi", "mip", "private mortgage insurance", "seguro hipotecario privado"] },
+    { code: "BSDPAY", label: "Payment Issue Resolved", keywords: ["payment", "check", "posting", "afford", "can't pay", "cant pay", "pago", "cheque", "no puedo pagar", "no me alcanza"] },
+    { code: "BSDPOF", label: "Payoff Issue Resolved", keywords: ["payoff", "pay off", "payoff quote", "liquidar", "monto de liquidacion", "saldar cuenta"] },
+    { code: "BSDPFS", label: "PIF Satis. Issue Resolved", keywords: ["paid in full", "satisfaction letter", "pif", "pagado por completo", "satisfaccion de hipoteca"] },
+    { code: "BSDACM", label: "Account Maintenance Issue Resolved", keywords: ["address change", "name change", "mailing address", "account info", "actualizacion de datos", "cambio de direccion"] },
+    { code: "BSDDEF", label: "Default Issue Resolved", keywords: ["default", "delinquent", "behind on payments", "mora", "atraso", "incumplimiento"] },
+    { code: "BSDDIS", label: "Natural Disaster Issue Resolved", keywords: ["disaster", "hurricane", "storm", "flood", "wildfire", "desastre natural", "huracan", "tormenta", "inundacion"] },
+    { code: "BSDEMC", label: "Email/Chat Service Issue Resolved", keywords: ["email", "chat", "message", "correo", "mensaje"] },
+    { code: "BSDPHN", label: "Phone Service Issue Resolved", keywords: ["phone", "call", "hold time", "hung up", "representative", "telefono", "llamada", "tiempo de espera", "representante"] },
+    { code: "BSDWEB", label: "Web Issue Resolved", keywords: ["website", "online portal", "login", "password reset", "pagina web", "sitio web", "clave", "iniciar sesion"] },
+    { code: "BSDYED", label: "Year-End Issue Resolved", keywords: ["year end", "year-end", "annual statement", "1098 statement", "fin de ano", "estado de cuenta anual"] },
+    { code: "BSDDBI", label: "Deceased Borrower Process", keywords: ["deceased", "passed away", "died", "fallecido", "defuncion", "muerto"] },
+    { code: "BSDSII", label: "Successor in Interest", keywords: ["successor", "sii", "heir", "heredero", "sucesor"] },
+    { code: "BSDHEL", label: "HELOC", keywords: ["heloc", "line of credit", "linea de credito"] }
+];
+
+function normalize(text) {
+    return text.toLowerCase()
+        .replace(/[áàä]/g, "a")
+        .replace(/[éèë]/g, "e")
+        .replace(/[íìï]/g, "i")
+        .replace(/[óòö]/g, "o")
+        .replace(/[úùü]/g, "u")
+        .replace(/['’]/g, "'")
+        .replace(/[^a-z0-9' ]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function checkEmpathy(textNormalized) {
+    for (var i = 0; i < empathyPhrases.length; i++) {
+        var termNorm = normalize(empathyPhrases[i]);
+        if (textNormalized.indexOf(termNorm) !== -1) return empathyPhrases[i];
+    }
+    var found = [];
+    for (var k = 0; k < empathyKeywords.length; k++) {
+        var keyNorm = normalize(empathyKeywords[k]);
+        if (textNormalized.indexOf(keyNorm) !== -1) found.push(empathyKeywords[k]);
+    }
+    return found.length >= 1 ? found.join(", ") : "";
+}
+
+function getBSDSuggestion(textNormalized) {
+    var bestMatch = null;
+    var maxScore = 0;
+
+    for (var i = 0; i < bsdRules.length; i++) {
+        var ruleScore = 0;
+        var matchedKeys = [];
+
+        for (var k = 0; k < bsdRules[i].keywords.length; k++) {
+            var ruleKeyNorm = normalize(bsdRules[i].keywords[k]);
+            if (textNormalized.indexOf(ruleKeyNorm) !== -1) {
+                ruleScore++;
+                matchedKeys.push(bsdRules[i].keywords[k]);
+            }
+        }
+
+        if (ruleScore > maxScore) {
+            maxScore = ruleScore;
+            bestMatch = {
+                rule: bsdRules[i],
+                matchedKeys: matchedKeys
+            };
+        }
+    }
+
+    if (bestMatch && maxScore > 0) {
+        return "<strong>" + bestMatch.rule.code + "</strong> — Borrower States Dissatisfaction - " + bestMatch.rule.label + 
+               "<br><small style='color:#aaa;'>Match detected by: [" + bestMatch.matchedKeys.join(", ") + "]</small>";
+    }
+
+    return "<strong>BSDPAY</strong> — Borrower States Dissatisfaction - Payment Issue Resolved (Sugerido por defecto)";
+}
+
+function resetTranscript() {
+    fullTranscriptHistory = "";
+    document.getElementById("transcript-box").innerHTML = "";
+    document.getElementById("result").innerHTML = "";
+    document.getElementById("empathy-result").innerHTML = "";
+    document.getElementById("bsd-suggestion").style.display = "none";
+    document.getElementById("bsd-suggestion").innerHTML = "";
+    document.getElementById("alerta").innerHTML = "";
+    document.getElementById("debug").innerHTML = "";
+}
+
+function toggleMonitoring() {
+    if (isListening) {
+        stopMonitoring();
+    } else {
+        startMonitoring();
+    }
+}
+
+async function startMonitoring() {
+    var btn = document.getElementById("btn-start");
+    var status = document.getElementById("status");
+    var selectedLang = document.getElementById("lang-select").value;
+
+    try {
+        if (!mediaStream || !mediaStream.active) {
+            mediaStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true
+                }
+            });
+        }
+
+        var audioTracks = mediaStream.getAudioTracks();
+        if (audioTracks.length === 0) {
+            alert("⚠️ Debes marcar la casilla 'Compartir audio del sistema' en la ventana flotante.");
+            stopMonitoring();
+            return;
+        }
+
+        status.innerText = "⏳ MORA is connecting to the audio stream...";
+        status.style.color = "#ffd700";
+
+        const wsUrl = `wss://api.deepgram.com/v1/listen?model=nova-2&language=${selectedLang}&punctuate=true`;
+
+        socket = new WebSocket(wsUrl, ['token', DEEPGRAM_API_KEY]);
+
+        socket.onopen = () => {
+            isListening = true;
+            btn.innerText = "🛑 Stop Monitoring.";
+            status.innerText = `🟢 Monitoring in progress. (${selectedLang === 'es' ? 'Español' : 'English'})...`;
+            status.style.color = "#4CAF50";
+
+            mediaRecorder = new MediaRecorder(mediaStream);
+            mediaRecorder.addEventListener('dataavailable', event => {
+                if (event.data.size > 0 && socket.readyState === 1) {
+                    socket.send(event.data);
+                }
+            });
+            mediaRecorder.start(250);
+        };
+
+        socket.onmessage = (message) => {
+            const received = JSON.parse(message.data);
+            const transcript = received.channel?.alternatives[0]?.transcript;
+
+            if (transcript && transcript.trim().length > 0) {
+                fullTranscriptHistory += " " + transcript;
+                analyzeRealtime(fullTranscriptHistory);
+            }
+        };
+
+        socket.onerror = (error) => {
+            console.error("Error en WebSocket:", error);
+            status.innerText = "❌ API Key connection error.";
+            status.style.color = "#ff4d4d";
+        };
+
+        socket.onclose = () => {
+            if (isListening) stopMonitoring();
+        };
+
+        mediaStream.getVideoTracks()[0].onended = () => {
+            stopMonitoring();
+        };
+
+    } catch (err) {
+        console.error("Error starting capture:", err);
+        status.innerText = "⏸️ Monitoring canceled or unavailable.";
+        status.style.color = "#ffd700";
+    }
+}
+
+function stopMonitoring() {
+    isListening = false;
+    var btn = document.getElementById("btn-start");
+    var status = document.getElementById("status");
+
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    if (socket && socket.readyState === 1) socket.close();
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+    }
+
+    btn.innerText = "🎤 Start Monitoring.";
+    status.innerText = "⏸️ Monitoring paused.";
+    status.style.color = "#ffd700";
+}
+
+async function handleLanguageChange() {
+    if (isListening) {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        if (socket && socket.readyState === 1) socket.close();
+        await startMonitoring();
+    }
+}
+
+// FUNCIÓN DE ANÁLISIS EN TIEMPO REAL CON RESALTADO EN EL TRANSCRIPT
+function analyzeRealtime(text) {
+    var textNormalized = normalize(text);
+    var score = 0;
+    var foundComplaints = [];
+
+    // Detectar Quejas
+    for (var i = 0; i < glossary.length; i++) {
+        var termNorm = normalize(glossary[i]);
+        if (termNorm.indexOf(" ") !== -1) {
+            if (textNormalized.indexOf(termNorm) !== -1) {
+                score++;
+                foundComplaints.push(glossary[i]);
+            }
+        } else {
+            var words = textNormalized.split(" ");
+            for (var j = 0; j < words.length; j++) {
+                if (words[j] === termNorm) {
+                    if (words[j - 1] === "not" || words[j - 1] === "no") continue;
+                    score++;
+                    foundComplaints.push(glossary[i]);
+                    break;
+                }
+            }
+        }
+    }
+
+    var detectedEmpathy = checkEmpathy(textNormalized);
+    
+    // Generar la versión visual con frases/palabras clave resaltadas
+    var highlightedText = text;
+    var allTriggersToHighlight = foundComplaints.concat(
+        detectedEmpathy ? detectedEmpathy.split(", ") : []
+    );
+
+    // Ordenar de mayor a menor longitud para evitar sobrecribir substrings
+    allTriggersToHighlight.sort((a, b) => b.length - a.length);
+
+    allTriggersToHighlight.forEach(function(trigger) {
+        if (trigger.trim() !== "") {
+            var regex = new RegExp("(" + trigger.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ")", "gi");
+            highlightedText = highlightedText.replace(regex, '<mark class="highlight-trigger">$1</mark>');
+        }
+    });
+
+    var box = document.getElementById("transcript-box");
+    box.innerHTML = highlightedText;
+    box.scrollTop = box.scrollHeight;
+
+    var result = document.getElementById("result");
+    var empathyResult = document.getElementById("empathy-result");
+    var bsdBox = document.getElementById("bsd-suggestion");
+    var debug = document.getElementById("debug");
+    var alerta = document.getElementById("alerta");
+
+    if (score >= 1) {
+        result.innerHTML = "❌ POTENTIAL COMPLAINT DETECTED (Score: " + score + ")";
+        result.className = "red";
+        alerta.innerHTML = "Please document your complaint in detail. For BSD Code questions, refer to Ref #4088";
+        alerta.className = "red";
+        
+        var suggestedCode = getBSDSuggestion(textNormalized);
+        bsdBox.innerHTML = "📌 Suggested BSD code: <br>" + suggestedCode;
+        bsdBox.style.display = "block";
+    } else if (detectedEmpathy !== "") {
+        result.innerHTML = "⚠️ EVALUANDO RESPUESTA DEL AGENTE";
+        result.className = "yellow";
+        empathyResult.innerHTML = "Based on your response, this may be a potential complaint.";
+        empathyResult.className = "yellow";
+        
+        var suggestedCode = getBSDSuggestion(textNormalized);
+        bsdBox.innerHTML = "📌 Suggested BSD code: <br>" + suggestedCode;
+        bsdBox.style.display = "block";
+        alerta.innerHTML = "";
+    } else {
+        result.innerHTML = "✅ NO COMPLAINT DETECTED";
+        result.className = "green";
+        alerta.innerHTML = "";
+        empathyResult.innerHTML = "";
+        bsdBox.style.display = "none";
+    }
+
+    debug.innerHTML = "Triggers: " + (detectedEmpathy ? "Empatía: [" + detectedEmpathy + "]" : (foundComplaints.join(", ") || "None."));
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    var btnStart = document.getElementById("btn-start");
+    var btnReset = document.getElementById("btn-reset");
+    var langSelect = document.getElementById("lang-select");
+
+    if (btnStart) btnStart.addEventListener("click", toggleMonitoring);
+    if (btnReset) btnReset.addEventListener("click", resetTranscript);
+    if (langSelect) langSelect.addEventListener("change", handleLanguageChange);
+});
+</script>
+
+</body>
+</html>
