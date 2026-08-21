@@ -325,12 +325,16 @@ function normalize(text) {
 // ENMASCARAMIENTO DE DATOS SENSIBLES
 function maskSensitiveData(text) {
     return text
-        // SSN (ej: 000-00-0000 o 000 00 0000)
+        // 1. Enmascarar dígitos numéricos continuos
         .replace(/\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g, '***-**-****')
-        // Montos de dinero (ej: $1,250.50, $500, USD 100)
         .replace(/(\$|usd\s?)\d+(?:,\d{3})*(?:\.\d{1,2})?/gi, '***')
-        // Secuencias de 4 o más dígitos consecutivos (cuentas, préstamos, etc.)
-        .replace(/\b\d{4,}\b/g, '****');
+        .replace(/\b\d{4,}\b/g, '****')
+
+        // 2. Enmascarar montos/monedas en palabras (ej: "hundred dollar", "dólares")
+        .replace(/\b(hundred|thousand|million|dollar|dollars|dolar|dolares)\b/gi, '***')
+
+        // 3. Enmascarar secuencias de 3 o más números escritos en letras consecutivas (Inglés y Español)
+        .replace(/\b((zero|one|two|three|four|five|six|seven|eight|nine|ten|cero|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)[\s,-]+){2,}(zero|one|two|three|four|five|six|seven|eight|nine|ten|cero|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\b/gi, '****');
 }
 
 function checkEmpathy(textNormalized) {
