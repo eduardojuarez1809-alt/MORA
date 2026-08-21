@@ -325,16 +325,17 @@ function normalize(text) {
 // ENMASCARAMIENTO DE DATOS SENSIBLES
 function maskSensitiveData(text) {
     return text
-        // 1. Enmascarar dígitos numéricos continuos
+        // 1. Enmascarar dígitos y montos numéricos tradicionales
         .replace(/\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g, '***-**-****')
         .replace(/(\$|usd\s?)\d+(?:,\d{3})*(?:\.\d{1,2})?/gi, '***')
-        .replace(/\b\d{4,}\b/g, '****')
+        .replace(/\b\d+\b/g, '****')
 
-        // 2. Enmascarar montos/monedas en palabras (ej: "hundred dollar", "dólares")
-        .replace(/\b(hundred|thousand|million|dollar|dollars|dolar|dolares)\b/gi, '***')
+        // 2. Enmascarar números individuales expresados en palabras (Inglés y Español)
+        .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/gi, '*')
+        .replace(/\b(cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciseis|diecisiete|dieciocho|diecinueve|veinte|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)\b/gi, '*')
 
-        // 3. Enmascarar secuencias de 3 o más números escritos en letras consecutivas (Inglés y Español)
-        .replace(/\b((zero|one|two|three|four|five|six|seven|eight|nine|ten|cero|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)[\s,-]+){2,}(zero|one|two|three|four|five|six|seven|eight|nine|ten|cero|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\b/gi, '****');
+        // 3. Enmascarar escalas de valor y unidades monetarias (Inglés y Español)
+        .replace(/\b(hundred|thousand|million|billion|dollar|dollars|cent|cents|dolar|dolares|ciento|cientos|ciento|mil|millon|millones)\b/gi, '***');
 }
 
 function checkEmpathy(textNormalized) {
