@@ -322,6 +322,17 @@ function normalize(text) {
         .trim();
 }
 
+// ENMASCARAMIENTO DE DATOS SENSIBLES
+function maskSensitiveData(text) {
+    return text
+        // SSN (ej: 000-00-0000 o 000 00 0000)
+        .replace(/\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g, '***-**-****')
+        // Montos de dinero (ej: $1,250.50, $500, USD 100)
+        .replace(/(\$|usd\s?)\d+(?:,\d{3})*(?:\.\d{1,2})?/gi, '***')
+        // Secuencias de 4 o más dígitos consecutivos (cuentas, préstamos, etc.)
+        .replace(/\b\d{4,}\b/g, '****');
+}
+
 function checkEmpathy(textNormalized) {
     for (var i = 0; i < empathyPhrases.length; i++) {
         var termNorm = normalize(empathyPhrases[i]);
@@ -488,9 +499,12 @@ async function handleLanguageChange() {
     }
 }
 
-// FUNCIÓN DE ANÁLISIS EN TIEMPO REAL CON RESALTADO EN EL TRANSCRIPT
+// ANÁLISIS EN TIEMPO REAL
 function analyzeRealtime(text) {
-    var textNormalized = normalize(text);
+    // 1. Ocultar información sensible
+    var maskedText = maskSensitiveData(text);
+
+    var textNormalized = normalize(maskedText);
     var score = 0;
     var foundComplaints = [];
 
@@ -517,13 +531,12 @@ function analyzeRealtime(text) {
 
     var detectedEmpathy = checkEmpathy(textNormalized);
     
-    // Generar la versión visual con frases/palabras clave resaltadas
-    var highlightedText = text;
+    // Resaltar triggers en el texto enmascarado
+    var highlightedText = maskedText;
     var allTriggersToHighlight = foundComplaints.concat(
         detectedEmpathy ? detectedEmpathy.split(", ") : []
     );
 
-    // Ordenar de mayor a menor longitud para evitar sobrecribir substrings
     allTriggersToHighlight.sort((a, b) => b.length - a.length);
 
     allTriggersToHighlight.forEach(function(trigger) {
@@ -555,7 +568,7 @@ function analyzeRealtime(text) {
     } else if (detectedEmpathy !== "") {
         result.innerHTML = "⚠️ EVALUANDO RESPUESTA DEL AGENTE";
         result.className = "yellow";
-        empathyResult.innerHTML = "Based on your response, this may be a potential complaint.";
+        empathyResult.innerHTML = "En base a tu respuesta puede ser un posible complaint";
         empathyResult.className = "yellow";
         
         var suggestedCode = getBSDSuggestion(textNormalized);
@@ -570,7 +583,7 @@ function analyzeRealtime(text) {
         bsdBox.style.display = "none";
     }
 
-    debug.innerHTML = "Triggers: " + (detectedEmpathy ? "Empatía: [" + detectedEmpathy + "]" : (foundComplaints.join(", ") || "None."));
+    debug.innerHTML = "Triggers: " + (detectedEmpathy ? "Empatía: [" + detectedEmpathy + "]" : (foundComplaints.join(", ") || "Ninguno"));
 }
 
 document.addEventListener("DOMContentLoaded", function() {
