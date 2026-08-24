@@ -412,7 +412,7 @@ async function startMonitoring() {
         status.innerText = "⏳ Configurando captura de audio...";
         status.style.color = "#ffd700";
 
-        // 1. Capturar audio del sistema (Auriculares / Cliente)
+        // 1. Capturar audio del sistema (Pantalla / Auriculares)
         const systemStream = await navigator.mediaDevices.getDisplayMedia({
             video: true,
             audio: { echoCancellation: true, noiseSuppression: true }
@@ -420,27 +420,28 @@ async function startMonitoring() {
 
         const systemAudioTrack = systemStream.getAudioTracks()[0];
         if (!systemAudioTrack) {
-            alert("⚠️ Debes activar 'Compartir audio del sistema' en la ventana flotante.");
+            alert("⚠️ Debes activar la casilla 'Compartir audio del sistema' en la ventana flotante.");
+            stopMonitoring();
             return;
         }
 
-        // 2. Capturar audio del Micrófono (Tu voz)
-        const micStream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: true }
-        });
-
-        // 3. Mezclar ambos audios usando AudioContext
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const destination = audioContext.createMediaStreamDestination();
-
         const systemSource = audioContext.createMediaStreamSource(new MediaStream([systemAudioTrack]));
-        const micSource = audioContext.createMediaStreamSource(micStream);
-
-        // Conectar ambas fuentes a la salida mezclada
         systemSource.connect(destination);
-        micSource.connect(destination);
 
-        // 4. Crear el flujo final combinado (Audio mezclado + Video para mantener activo getDisplayMedia)
+        // 2. Intentar capturar micrófono (Si falla o lo rechazas, el sistema sigue funcionando igual)
+        try {
+            const micStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true }
+            });
+            const micSource = audioContext.createMediaStreamSource(micStream);
+            micSource.connect(destination);
+        } catch (micErr) {
+            console.warn("No se concedió permiso de micrófono. Se continuará solo con el audio del sistema.", micErr);
+        }
+
+        // 3. Flujo final combinado
         mediaStream = new MediaStream([
             destination.getStream().getAudioTracks()[0],
             systemStream.getVideoTracks()[0]
@@ -452,7 +453,7 @@ async function startMonitoring() {
         socket.onopen = () => {
             isListening = true;
             btn.innerText = "🛑 Stop Monitoring.";
-            status.innerText = `🟢 Escuchando Sistema y Micrófono (${selectedLang === 'es' ? 'Español' : 'English'})...`;
+            status.innerText = `🟢 Escuchando audio (${selectedLang === 'es' ? 'Español' : 'English'})...`;
             status.style.color = "#4CAF50";
 
             mediaRecorder = new MediaRecorder(mediaStream);
