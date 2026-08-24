@@ -492,7 +492,7 @@ async function startMonitoring() {
 
     } catch (err) {
         console.error("Error general en startMonitoring:", err);
-        status.innerText = "⏸️ Monitoreo cancelado o permisos denegados.";
+        status.innerText = "⏸️ Monitoring Cancelled or Access Denied";
         status.style.color = "#ffd700";
     }
 }
@@ -514,7 +514,7 @@ function stopMonitoring() {
     }
 
     btn.innerText = "🎤 Start MORA";
-    status.innerText = "⏸️ Monitoreo pausado.";
+    status.innerText = "⏸️ Monitoring Paused";
     status.style.color = "#ffd700";
 }
 
@@ -587,9 +587,9 @@ function analyzeRealtime(text) {
         bsdBox.innerHTML = "📌 Suggested BSD code: <br>" + suggestedCode;
         bsdBox.style.display = "block";
     } else if (detectedEmpathy !== "") {
-        result.innerHTML = "⚠️ EVALUANDO RESPUESTA DEL AGENTE";
+        result.innerHTML = "⚠️ Evaluating Agent Response";
         result.className = "yellow";
-        empathyResult.innerHTML = "En base a tu respuesta puede ser un posible complaint";
+        empathyResult.innerHTML = "Based on your response, this could potentially be considered a complaint.";
         empathyResult.className = "yellow";
         
         var suggestedCode = getBSDSuggestion(textNormalized);
