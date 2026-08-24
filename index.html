@@ -409,34 +409,50 @@ async function startMonitoring() {
     var selectedLang = document.getElementById("lang-select").value;
 
     try {
-        if (!mediaStream || !mediaStream.active) {
-            mediaStream = await navigator.mediaDevices.getDisplayMedia({
-                video: true,
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true
-                }
-            });
-        }
+        status.innerText = "⏳ Configurando captura de audio...";
+        status.style.color = "#ffd700";
 
-        var audioTracks = mediaStream.getAudioTracks();
-        if (audioTracks.length === 0) {
-            alert("⚠️ Debes marcar la casilla 'Compartir audio del sistema' en la ventana flotante.");
-            stopMonitoring();
+        // 1. Capturar audio del sistema (Auriculares / Cliente)
+        const systemStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: { echoCancellation: true, noiseSuppression: true }
+        });
+
+        const systemAudioTrack = systemStream.getAudioTracks()[0];
+        if (!systemAudioTrack) {
+            alert("⚠️ Debes activar 'Compartir audio del sistema' en la ventana flotante.");
             return;
         }
 
-        status.innerText = "⏳ MORA is connecting to the audio stream...";
-        status.style.color = "#ffd700";
+        // 2. Capturar audio del Micrófono (Tu voz)
+        const micStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true }
+        });
+
+        // 3. Mezclar ambos audios usando AudioContext
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const destination = audioContext.createMediaStreamDestination();
+
+        const systemSource = audioContext.createMediaStreamSource(new MediaStream([systemAudioTrack]));
+        const micSource = audioContext.createMediaStreamSource(micStream);
+
+        // Conectar ambas fuentes a la salida mezclada
+        systemSource.connect(destination);
+        micSource.connect(destination);
+
+        // 4. Crear el flujo final combinado (Audio mezclado + Video para mantener activo getDisplayMedia)
+        mediaStream = new MediaStream([
+            destination.getStream().getAudioTracks()[0],
+            systemStream.getVideoTracks()[0]
+        ]);
 
         const wsUrl = `wss://api.deepgram.com/v1/listen?model=nova-2&language=${selectedLang}&punctuate=true`;
-
         socket = new WebSocket(wsUrl, ['token', DEEPGRAM_API_KEY]);
 
         socket.onopen = () => {
             isListening = true;
             btn.innerText = "🛑 Stop Monitoring.";
-            status.innerText = `🟢 Monitoring in progress. (${selectedLang === 'es' ? 'Español' : 'English'})...`;
+            status.innerText = `🟢 Escuchando Sistema y Micrófono (${selectedLang === 'es' ? 'Español' : 'English'})...`;
             status.style.color = "#4CAF50";
 
             mediaRecorder = new MediaRecorder(mediaStream);
@@ -460,7 +476,7 @@ async function startMonitoring() {
 
         socket.onerror = (error) => {
             console.error("Error en WebSocket:", error);
-            status.innerText = "❌ API Key connection error.";
+            status.innerText = "❌ Error de conexión con la API.";
             status.style.color = "#ff4d4d";
         };
 
@@ -468,13 +484,13 @@ async function startMonitoring() {
             if (isListening) stopMonitoring();
         };
 
-        mediaStream.getVideoTracks()[0].onended = () => {
+        systemStream.getVideoTracks()[0].onended = () => {
             stopMonitoring();
         };
 
     } catch (err) {
-        console.error("Error starting capture:", err);
-        status.innerText = "⏸️ Monitoring canceled or unavailable.";
+        console.error("Error al iniciar captura de audio:", err);
+        status.innerText = "⏸️ Monitoreo cancelado o permisos denegados.";
         status.style.color = "#ffd700";
     }
 }
