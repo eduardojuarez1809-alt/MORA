@@ -199,20 +199,18 @@ const DEEPGRAM_API_KEY = "6ac125a3e51eb51126c7636b1f1477b4480b068b";
 var socket = null;
 var mediaRecorder = null;
 var mediaStream = null;
+var audioContext = null;
 var isListening = false;
 var fullTranscriptHistory = "";
 
 // DICCIONARIO BASE DE COMPLAINTS
 var glossary = [
-    // --- FRASES COMPUESTAS / CONTRACCIONES (INGLÉS Y ESPAÑOL) ---
     "don't understand", "dont understand", "do not understand", "doesn't make sense", "doesnt make sense",
     "cannot afford", "can't afford", "cant afford", "can't pay", "cant pay", "unable to pay",
     "talking to my lawyer", "talk to my lawyer", "speaking with my attorney", "never received",
     "no entiendo", "no le entiendo", "no entiendo nada", "no tiene sentido", "no puedo pagar",
     "no me alcanza", "voy a hablar con mi abogado", "hablare con mi abogado", "nunca recibi",
     "nunca me llego", "me estan robando", "son unos rateros", "es una estafa",
-
-    // --- PALABRAS INDIVIDUALES EXISTENTES ---
     "angry","upset","frustrated","unhappy","disappointed","bad","terrible","unacceptable","wrong","incorrect",
     "unable","again","several","late","increase","fee","credit","report","bureau","reported","complaint","cfpb",
     "attorney","lawsuit","legal","supervisor","dissatisfaction","abuse","abusive","defraud","frb","mistreat",
@@ -281,7 +279,6 @@ var empathyKeywords = [
     "inconvenientes", "inconveniente", "frustracion", "entiendo", "comprendo"
 ];
 
-// REGLAS BSD AMPLIADAS
 var bsdRules = [
     { code: "BSDFRD", label: "Fraud", keywords: ["fraud", "identity theft", "stolen", "scam", "fraude", "robo de identidad", "usurpacion"] },
     { code: "BSDBNK", label: "Bankruptcy Issue Resolved", keywords: ["bankrupt", "bankruptcy", "chapter 7", "chapter 13", "bancarrota", "quiebra"] },
@@ -322,20 +319,14 @@ function normalize(text) {
         .trim();
 }
 
-// ENMASCARAMIENTO DE DATOS SENSIBLES
 function maskSensitiveData(text) {
     return text
-        // 1. Enmascarar dígitos y montos numéricos tradicionales
         .replace(/\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g, '***-**-****')
         .replace(/(\$|usd\s?)\d+(?:,\d{3})*(?:\.\d{1,2})?/gi, '***')
         .replace(/\b\d+\b/g, '****')
-
-        // 2. Enmascarar números individuales expresados en palabras (Inglés y Español)
         .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/gi, '*')
-        .replace(/\b(cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciseis|diecisiete|dieciocho|diecinueve|veinte|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)\b/gi, '*')
-
-        // 3. Enmascarar escalas de valor y unidades monetarias (Inglés y Español)
-        .replace(/\b(hundred|thousand|million|billion|dollar|dollars|cent|cents|dolar|dolares|ciento|cientos|ciento|mil|millon|millones)\b/gi, '***');
+        .replace(/\b(cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|diecisiete|dieciocho|diecinueve|veinte|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)\b/gi, '*')
+        .replace(/\b(hundred|thousand|million|billion|dollar|dollars|cent|cents|dolar|dolares|ciento|cientos|mil|millon|millones)\b/gi, '***');
 }
 
 function checkEmpathy(textNormalized) {
@@ -409,10 +400,10 @@ async function startMonitoring() {
     var selectedLang = document.getElementById("lang-select").value;
 
     try {
-        status.innerText = "⏳ Configurando captura de audio...";
+        status.innerText = "⏳ Solicitando captura de pantalla/sistema...";
         status.style.color = "#ffd700";
 
-        // 1. Capturar audio del sistema (Pantalla / Auriculares)
+        // 1. Obtener pantalla/sistema
         const systemStream = await navigator.mediaDevices.getDisplayMedia({
             video: true,
             audio: { echoCancellation: true, noiseSuppression: true }
@@ -420,32 +411,34 @@ async function startMonitoring() {
 
         const systemAudioTrack = systemStream.getAudioTracks()[0];
         if (!systemAudioTrack) {
-            alert("⚠️ Debes activar la casilla 'Compartir audio del sistema' en la ventana flotante.");
-            stopMonitoring();
+            alert("⚠️ Debes marcar la casilla 'Compartir audio del sistema' en la ventana flotante.");
+            systemStream.getTracks().forEach(t => t.stop());
+            status.innerText = "⏸️ Sin audio de sistema seleccionado.";
             return;
         }
 
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // 2. Inicializar AudioContext
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+
         const destination = audioContext.createMediaStreamDestination();
         const systemSource = audioContext.createMediaStreamSource(new MediaStream([systemAudioTrack]));
         systemSource.connect(destination);
 
-        // 2. Intentar capturar micrófono (Si falla o lo rechazas, el sistema sigue funcionando igual)
+        // 3. Intentar agregar micrófono
         try {
-            const micStream = await navigator.mediaDevices.getUserMedia({
-                audio: { echoCancellation: true, noiseSuppression: true }
-            });
+            const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const micSource = audioContext.createMediaStreamSource(micStream);
             micSource.connect(destination);
         } catch (micErr) {
-            console.warn("No se concedió permiso de micrófono. Se continuará solo con el audio del sistema.", micErr);
+            console.warn("Micrófono no conectado o denegado. Se procesa solo audio de sistema.");
         }
 
-        // 3. Flujo final combinado
-        mediaStream = new MediaStream([
-            destination.getStream().getAudioTracks()[0],
-            systemStream.getVideoTracks()[0]
-        ]);
+        // 4. Stream final unificado
+        const combinedAudioTrack = destination.stream.getAudioTracks()[0];
+        mediaStream = new MediaStream([combinedAudioTrack, systemStream.getVideoTracks()[0]]);
 
         const wsUrl = `wss://api.deepgram.com/v1/listen?model=nova-2&language=${selectedLang}&punctuate=true`;
         socket = new WebSocket(wsUrl, ['token', DEEPGRAM_API_KEY]);
@@ -453,7 +446,7 @@ async function startMonitoring() {
         socket.onopen = () => {
             isListening = true;
             btn.innerText = "🛑 Stop Monitoring.";
-            status.innerText = `🟢 Escuchando audio (${selectedLang === 'es' ? 'Español' : 'English'})...`;
+            status.innerText = `🟢 Monitoreando en vivo (${selectedLang === 'es' ? 'Español' : 'English'})...`;
             status.style.color = "#4CAF50";
 
             mediaRecorder = new MediaRecorder(mediaStream);
@@ -477,7 +470,7 @@ async function startMonitoring() {
 
         socket.onerror = (error) => {
             console.error("Error en WebSocket:", error);
-            status.innerText = "❌ Error de conexión con la API.";
+            status.innerText = "❌ Error de conexión con Deepgram.";
             status.style.color = "#ff4d4d";
         };
 
@@ -491,7 +484,7 @@ async function startMonitoring() {
 
     } catch (err) {
         console.error("Error al iniciar captura de audio:", err);
-        status.innerText = "⏸️ Monitoreo cancelado o permisos denegados.";
+        status.innerText = "⏸️ Monitoreo cancelado o sin permisos.";
         status.style.color = "#ffd700";
     }
 }
@@ -503,34 +496,33 @@ function stopMonitoring() {
 
     if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
     if (socket && socket.readyState === 1) socket.close();
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
     if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
         mediaStream = null;
     }
 
-    btn.innerText = "🎤 Start Monitoring.";
-    status.innerText = "⏸️ Monitoring paused.";
+    btn.innerText = "🎤 Start MORA";
+    status.innerText = "⏸️ Monitoreo pausado.";
     status.style.color = "#ffd700";
 }
 
 async function handleLanguageChange() {
     if (isListening) {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        if (socket && socket.readyState === 1) socket.close();
+        stopMonitoring();
         await startMonitoring();
     }
 }
 
-// ANÁLISIS EN TIEMPO REAL
 function analyzeRealtime(text) {
-    // 1. Ocultar información sensible
     var maskedText = maskSensitiveData(text);
-
     var textNormalized = normalize(maskedText);
     var score = 0;
     var foundComplaints = [];
 
-    // Detectar Quejas
     for (var i = 0; i < glossary.length; i++) {
         var termNorm = normalize(glossary[i]);
         if (termNorm.indexOf(" ") !== -1) {
@@ -553,7 +545,6 @@ function analyzeRealtime(text) {
 
     var detectedEmpathy = checkEmpathy(textNormalized);
     
-    // Resaltar triggers en el texto enmascarado
     var highlightedText = maskedText;
     var allTriggersToHighlight = foundComplaints.concat(
         detectedEmpathy ? detectedEmpathy.split(", ") : []
@@ -618,6 +609,5 @@ document.addEventListener("DOMContentLoaded", function() {
     if (langSelect) langSelect.addEventListener("change", handleLanguageChange);
 });
 </script>
-
 </body>
 </html>
