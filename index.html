@@ -400,7 +400,7 @@ async function startMonitoring() {
     var selectedLang = document.getElementById("lang-select").value;
 
     try {
-        status.innerText = "⏳ 1/2: Selecciona la pantalla/pestaña y activa 'Compartir audio'...";
+        status.innerText = "⏳ 1/2: Select the screen or tab you want to share and enable 'Share audio'...";
         status.style.color = "#ffd700";
 
         // 1. Capturar audio del sistema (Pantalla)
@@ -432,7 +432,7 @@ async function startMonitoring() {
         systemSource.connect(destination);
 
         // 3. Solicitar micrófono de forma independiente
-        status.innerText = "⏳ 2/2: Autoriza el uso del micrófono...";
+        status.innerText = "⏳ 2/2: Allow microphone access...";
         
         let micStream = null;
         try {
@@ -454,7 +454,7 @@ async function startMonitoring() {
         socket.onopen = () => {
             isListening = true;
             btn.innerText = "🛑 Stop Monitoring.";
-            status.innerText = `🟢 Escuchando Sistema ${micStream ? '+ Micrófono' : ''} (${selectedLang === 'es' ? 'Español' : 'English'})...`;
+            status.innerText = `🟢 System audio detected. ${micStream ? '+ Micrófono' : ''} (${selectedLang === 'es' ? 'Español' : 'English'})...`;
             status.style.color = "#4CAF50";
 
             mediaRecorder = new MediaRecorder(mediaStream);
