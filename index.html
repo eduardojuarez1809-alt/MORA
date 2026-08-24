@@ -400,20 +400,24 @@ async function startMonitoring() {
     var selectedLang = document.getElementById("lang-select").value;
 
     try {
-        status.innerText = "⏳ Solicitando captura de pantalla/sistema...";
+        status.innerText = "⏳ 1/2: Selecciona la pantalla/pestaña y activa 'Compartir audio'...";
         status.style.color = "#ffd700";
 
-        // 1. Obtener pantalla/sistema
+        // 1. Capturar audio del sistema (Pantalla)
         const systemStream = await navigator.mediaDevices.getDisplayMedia({
             video: true,
-            audio: { echoCancellation: true, noiseSuppression: true }
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
         });
 
         const systemAudioTrack = systemStream.getAudioTracks()[0];
         if (!systemAudioTrack) {
-            alert("⚠️ Debes marcar la casilla 'Compartir audio del sistema' en la ventana flotante.");
+            alert("⚠️ Importante: Debes marcar la casilla 'Compartir audio del sistema' en la ventana emergente.");
             systemStream.getTracks().forEach(t => t.stop());
-            status.innerText = "⏸️ Sin audio de sistema seleccionado.";
+            status.innerText = "⏸️ Captura cancelada (Faltó audio del sistema).";
             return;
         }
 
@@ -427,26 +431,30 @@ async function startMonitoring() {
         const systemSource = audioContext.createMediaStreamSource(new MediaStream([systemAudioTrack]));
         systemSource.connect(destination);
 
-        // 3. Intentar agregar micrófono
+        // 3. Solicitar micrófono de forma independiente
+        status.innerText = "⏳ 2/2: Autoriza el uso del micrófono...";
+        
+        let micStream = null;
         try {
-            const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const micSource = audioContext.createMediaStreamSource(micStream);
             micSource.connect(destination);
-        } catch (micErr) {
-            console.warn("Micrófono no conectado o denegado. Se procesa solo audio de sistema.");
+        } catch (micError) {
+            console.warn("Micrófono omitido o denegado:", micError);
         }
 
-        // 4. Stream final unificado
-        const combinedAudioTrack = destination.stream.getAudioTracks()[0];
-        mediaStream = new MediaStream([combinedAudioTrack, systemStream.getVideoTracks()[0]]);
+        // 4. Armar stream unificado
+        const combinedTrack = destination.stream.getAudioTracks()[0];
+        mediaStream = new MediaStream([combinedTrack, systemStream.getVideoTracks()[0]]);
 
+        // 5. Conectar a Deepgram
         const wsUrl = `wss://api.deepgram.com/v1/listen?model=nova-2&language=${selectedLang}&punctuate=true`;
         socket = new WebSocket(wsUrl, ['token', DEEPGRAM_API_KEY]);
 
         socket.onopen = () => {
             isListening = true;
             btn.innerText = "🛑 Stop Monitoring.";
-            status.innerText = `🟢 Monitoreando en vivo (${selectedLang === 'es' ? 'Español' : 'English'})...`;
+            status.innerText = `🟢 Escuchando Sistema ${micStream ? '+ Micrófono' : ''} (${selectedLang === 'es' ? 'Español' : 'English'})...`;
             status.style.color = "#4CAF50";
 
             mediaRecorder = new MediaRecorder(mediaStream);
@@ -469,8 +477,8 @@ async function startMonitoring() {
         };
 
         socket.onerror = (error) => {
-            console.error("Error en WebSocket:", error);
-            status.innerText = "❌ Error de conexión con Deepgram.";
+            console.error("Error WebSocket:", error);
+            status.innerText = "❌ Error al conectar con Deepgram.";
             status.style.color = "#ff4d4d";
         };
 
@@ -483,8 +491,8 @@ async function startMonitoring() {
         };
 
     } catch (err) {
-        console.error("Error al iniciar captura de audio:", err);
-        status.innerText = "⏸️ Monitoreo cancelado o sin permisos.";
+        console.error("Error general en startMonitoring:", err);
+        status.innerText = "⏸️ Monitoreo cancelado o permisos denegados.";
         status.style.color = "#ffd700";
     }
 }
