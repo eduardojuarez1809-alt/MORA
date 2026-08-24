@@ -454,7 +454,7 @@ async function startMonitoring() {
         socket.onopen = () => {
             isListening = true;
             btn.innerText = "🛑 Stop Monitoring.";
-            status.innerText = `🟢 System audio detected. ${micStream ? '+ Micrófono' : ''} (${selectedLang === 'es' ? 'Español' : 'English'})...`;
+            status.innerText = `🟢 System audio detected. ${micStream ? '+ Microphone' : ''} (${selectedLang === 'es' ? 'Español' : 'English'})...`;
             status.style.color = "#4CAF50";
 
             mediaRecorder = new MediaRecorder(mediaStream);
