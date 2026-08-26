@@ -83,7 +83,6 @@
 </head>
 <body>
 
-    <!-- TÍTULO RESTAURADO -->
     <h1 class="main-title">M.O.R.A PROJECT</h1>
 
     <div class="controls">
@@ -246,39 +245,21 @@ function maskSensitiveData(text) {
         .replace(/(\$|usd\s?)\d+(?:,\d{3})*(?:\.\d{1,2})?/gi, '***')
         .replace(/\b\d+\b/g, '****')
         .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/gi, '*')
-        .replace(/\b(cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|diecisiete|dieciocho|diecinueve|veinte|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)\b/gi, '*')
+        .replace(/\b(cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|diesiete|dieciocho|diecinueve|veinte|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)\b/gi, '*')
         .replace(/\b(hundred|thousand|million|billion|dollar|dollars|cent|cents|dolar|dolares|ciento|cientos|mil|millon|millones)\b/gi, '***');
 }
 
 function checkEmpathy(textNormalized) {
     var falsePositiveContexts = [
-        "audio issue", "audio issues", "technical issue", "technical issues", "tech issue", "tech issues",
-        "connection issue", "connection issues", "system issue", "system issues", "system slow", "system lag",
-        "headset issue", "headset issues", "microphone issue", "mic issue", "bad connection", "line issue",
-        "breaking up", "you broke up", "you were breaking up", "couldn't hear", "could not hear", "can't hear",
-        "static on the line", "background noise", "delay on the line", "frozen screen", "system freeze",
-        "falla de audio", "fallas de audio", "problema de audio", "problemas de audio", "problema tecnico",
-        "problemas tecnicos", "fallas tecnicas", "falla de sistema", "sistema lento", "se traba el sistema",
-        "no lo escucho", "no la escucho", "se escucha entrecortado", "ruido en la linea", "mala conexion",
-        "sorry go ahead", "sorry you go first", "sorry I cut you off", "sorry to interrupt",
-        "sorry didn't catch that", "sorry come again", "sorry what did you say", "sorry pardon",
-        "disculpe hable usted", "disculpe no le escuche", "disculpe que lo interrumpa", "disculpe repetiria",
-        "perdon no escuche", "perdon que dijo", "disculpe la interrupcion",
-        "my mistake", "my bad", "i was wrong", "wrong button", "wrong number", "wrong key",
-        "typed the wrong", "said the wrong", "i meant to say", "sorry wrong account", "sorry wrong date",
-        "mi error", "error mio", "me equivoque", "dije mal", "marque mal", "numero equivocado",
-        "boton equivocado", "quise decir", "disculpe me equivoque",
-        "sorry for the hold", "sorry to keep you waiting", "sorry for the wait", "takes a second to load",
-        "system is loading", "pulling up your account", "looking for the option", "bear with me",
-        "disculpe la espera", "disculpe la demora", "el sistema esta cargando", "buscando su informacion",
-        "un segundo por favor", "gracias por la espera",
-        "sorry about that", "sorry for that", "disculpe por eso", "perdon por eso"
+        "audio issue", "technical issue", "connection issue", "system issue", "system slow",
+        "headset issue", "bad connection", "line issue", "breaking up", "can't hear",
+        "falla de audio", "problema tecnico", "falla de sistema", "no lo escucho",
+        "sorry go ahead", "sorry to interrupt", "sorry wrong account", "my mistake",
+        "sorry for the wait", "sorry about that", "disculpe la espera", "disculpe por eso"
     ];
 
     for (var f = 0; f < falsePositiveContexts.length; f++) {
-        if (textNormalized.indexOf(falsePositiveContexts[f]) !== -1) {
-            return ""; 
-        }
+        if (textNormalized.indexOf(falsePositiveContexts[f]) !== -1) return "";
     }
 
     for (var i = 0; i < empathyPhrases.length; i++) {
@@ -289,21 +270,7 @@ function checkEmpathy(textNormalized) {
     var found = [];
     for (var k = 0; k < empathyKeywords.length; k++) {
         var keyNorm = normalize(empathyKeywords[k]);
-        var keywordIndex = textNormalized.indexOf(keyNorm);
-
-        if (keywordIndex !== -1) {
-            var start = Math.max(0, keywordIndex - 35);
-            var end = Math.min(textNormalized.length, keywordIndex + keyNorm.length + 35);
-            var snippet = textNormalized.substring(start, end);
-
-            var isFalsePositive = falsePositiveContexts.some(function(fp) {
-                return snippet.indexOf(fp) !== -1;
-            });
-
-            if (!isFalsePositive) {
-                found.push(empathyKeywords[k]);
-            }
-        }
+        if (textNormalized.indexOf(keyNorm) !== -1) found.push(empathyKeywords[k]);
     }
 
     return found.length >= 1 ? found.join(", ") : "";
@@ -406,6 +373,7 @@ async function startMonitoring() {
             alert("⚠️ Importante: Debes marcar la casilla 'Compartir audio del sistema' en la ventana emergente.");
             systemStream.getTracks().forEach(t => t.stop());
             status.innerText = "⏸️ Monitoreo cancelado (falta audio de sistema).";
+            status.style.color = "#ffd700";
             return;
         }
 
@@ -418,13 +386,12 @@ async function startMonitoring() {
         const systemSource = audioContext.createMediaStreamSource(new MediaStream([systemAudioTrack]));
         systemSource.connect(destination);
 
-        let micStream = null;
         try {
-            micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const micSource = audioContext.createMediaStreamSource(micStream);
             micSource.connect(destination);
         } catch (micErr) {
-            console.warn("Micrófono no otorgado o ausente. Procesando solo audio del sistema.");
+            console.warn("Micrófono no otorgado. Procesando solo audio del sistema.");
         }
 
         const combinedTrack = destination.stream.getAudioTracks()[0];
@@ -436,7 +403,6 @@ async function startMonitoring() {
         socket.onopen = () => {
             isListening = true;
             btn.innerHTML = "🔴 Stop Monitoring.";
-            btn.style.backgroundColor = "#ffc107";
             status.innerText = `🟢 Monitoring in progress. (${selectedLang === 'es' ? 'Spanish' : 'English'})...`;
             status.style.color = "#4CAF50";
 
