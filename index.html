@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Mortgage Observation & Response Assistant</title>
@@ -13,13 +13,12 @@ body {
 
 /* TITULO PRINCIPAL M.O.R.A PROJECT */
 h2 {
-    font-size: 38px;
+    font-size: 34px;
     font-weight: 900;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     background: linear-gradient(135deg, #fff7ad 0%, #ffd700 50%, #c59b27 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0px 0px 15px rgba(255, 215, 0, 0.4);
     margin-bottom: 25px;
     text-transform: uppercase;
 }
@@ -27,52 +26,50 @@ h2 {
 .controls-container {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     margin-bottom: 20px;
 }
 
 #btn-start {
-    background: linear-gradient(135deg, #ffd700, #b8860b);
+    background-color: #ffd700;
     color: #000;
     font-weight: bold;
-    padding: 12px 24px;
+    padding: 10px 18px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
-    box-shadow: 0px 4px 10px rgba(255, 215, 0, 0.2);
-    transition: all 0.3s ease;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 #btn-start:hover {
-    background: linear-gradient(135deg, #ffe44d, #d4af37);
-    transform: translateY(-2px);
-    box-shadow: 0px 6px 15px rgba(255, 215, 0, 0.4);
+    background-color: #ffe44d;
 }
 
 #btn-reset {
-    background: linear-gradient(135deg, #00bcd4, #007a87);
+    background-color: #00bcd4;
     color: #fff;
     font-weight: bold;
-    padding: 12px 20px;
+    padding: 10px 18px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
-    box-shadow: 0px 4px 10px rgba(0, 188, 212, 0.2);
-    transition: all 0.3s ease;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 #btn-reset:hover {
-    background: linear-gradient(135deg, #33d0e1, #0097a7);
-    transform: translateY(-2px);
-    box-shadow: 0px 6px 15px rgba(0, 188, 212, 0.4);
+    background-color: #33d0e1;
 }
 
 #lang-select {
     background-color: #1a1a1a;
     color: #ffd700;
     border: 1px solid #ffd700;
-    padding: 11px 15px;
-    font-size: 16px;
+    padding: 9px 12px;
+    font-size: 15px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
@@ -86,12 +83,11 @@ h2 {
     margin-bottom: 15px;
 }
 
-/* CAJA DE TRANSCRIPCIÓN Y RESALTADO */
 label {
     font-weight: bold;
     color: #aaa;
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 #transcript-box {
@@ -106,17 +102,14 @@ label {
     line-height: 1.5;
     overflow-y: auto;
     box-sizing: border-box;
-    box-shadow: inset 0px 2px 5px rgba(0,0,0,0.8);
 }
 
-/* CLASE PARA RESALTAR TRIGGERS */
 mark.highlight-trigger {
     background-color: #ffee00;
     color: #000;
     font-weight: bold;
     padding: 2px 4px;
     border-radius: 3px;
-    box-shadow: 0px 0px 8px rgba(255, 238, 0, 0.8);
 }
 
 #result, #empathy-result {
@@ -148,18 +141,16 @@ mark.highlight-trigger {
 .yellow { color: #ffeb3b; }
 .gray { color: #aaa; margin-top: 10px; }
 
-/* BRANDING MODER ESTILIZADO */
 #moder {
     position: fixed;
     bottom: 15px;
     left: 20px;
-    font-size: 50px;
+    font-size: 45px;
     font-weight: 900;
-    letter-spacing: 4px;
+    letter-spacing: 3px;
     background: linear-gradient(180deg, #ffe066 0%, #d4af37 50%, #8a6d1c 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0px 2px 8px rgba(212, 175, 55, 0.5));
     user-select: none;
     z-index: 9999;
 }
@@ -170,7 +161,7 @@ mark.highlight-trigger {
 <h2>M.O.R.A PROJECT</h2>
 
 <div class="controls-container">
-    <button id="btn-start">🎤 Start MORA</button>
+    <button id="btn-start">🔑 Start Monitoring.</button>
     <button id="btn-reset">🔄 Restart MORA</button>
     <select id="lang-select">
         <option value="en">🇺🇸 English</option>
@@ -178,7 +169,7 @@ mark.highlight-trigger {
     </select>
 </div>
 
-<div id="status">Press the button to start MORA...</div>
+<div id="status">⏸️ Monitoring paused.</div>
 
 <label>I am listening attentively.:</label>
 <div id="transcript-box"></div>
@@ -189,13 +180,9 @@ mark.highlight-trigger {
 <div id="alerta"></div>
 <div id="debug" class="gray"></div>
 
-<!-- MARCA MODER FIJA EN LA ESQUINA INFERIOR IZQUIERDA -->
 <div id="moder">MODER</div>
 
 <script>
-// ==========================================
-// CONFIGURACIÓN DE DEEPGRAM Y M.O.R.A
-// ==========================================
 const DEEPGRAM_API_KEY = "6ac125a3e51eb51126c7636b1f1477b4480b068b"; 
 
 var socket = null;
@@ -205,7 +192,6 @@ var audioContext = null;
 var isListening = false;
 var fullTranscriptHistory = "";
 
-// DICCIONARIO BASE DE COMPLAINTS
 var glossary = [
     "don't understand", "dont understand", "do not understand", "doesn't make sense", "doesnt make sense",
     "cannot afford", "can't afford", "cant afford", "can't pay", "cant pay", "unable to pay",
@@ -375,7 +361,7 @@ function getBSDSuggestion(textNormalized) {
                "<br><small style='color:#aaa;'>Match detected by: [" + bestMatch.matchedKeys.join(", ") + "]</small>";
     }
 
-    return "<strong>BSDPAY</strong> — Borrower States Dissatisfaction - Payment Issue Resolved (Sugerido por defecto)";
+    return "<strong>BSDPAY</strong> — Borrower States Dissatisfaction - Payment Issue Resolved (Suggested by default)";
 }
 
 function resetTranscript() {
@@ -403,10 +389,9 @@ async function startMonitoring() {
     var selectedLang = document.getElementById("lang-select").value;
 
     try {
-        status.innerText = "⏳ 1/2: Selecciona la pantalla/pestaña y activa 'Compartir audio'...";
+        status.innerText = "⏳ 1/2: Select screen/tab and enable 'Share system audio'...";
         status.style.color = "#ffd700";
 
-        // 1. Capturar audio del sistema (Pantalla)
         const systemStream = await navigator.mediaDevices.getDisplayMedia({
             video: true,
             audio: {
@@ -418,13 +403,12 @@ async function startMonitoring() {
 
         const systemAudioTrack = systemStream.getAudioTracks()[0];
         if (!systemAudioTrack) {
-            alert("⚠️ Importante: Debes marcar la casilla 'Compartir audio del sistema' en la ventana emergente.");
+            alert("⚠️ Important: You must check 'Share system audio' in the popup window.");
             systemStream.getTracks().forEach(t => t.stop());
-            status.innerText = "⏸️ Captura cancelada (Faltó audio del sistema).";
+            status.innerText = "⏸️ Monitoring cancelled or permissions denied.";
             return;
         }
 
-        // 2. Inicializar AudioContext
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
             await audioContext.resume();
@@ -434,8 +418,7 @@ async function startMonitoring() {
         const systemSource = audioContext.createMediaStreamSource(new MediaStream([systemAudioTrack]));
         systemSource.connect(destination);
 
-        // 3. Solicitar micrófono de forma independiente
-        status.innerText = "⏳ 2/2: Autoriza el uso del micrófono...";
+        status.innerText = "⏳ 2/2: Authorize microphone access...";
         
         let micStream = null;
         try {
@@ -443,21 +426,19 @@ async function startMonitoring() {
             const micSource = audioContext.createMediaStreamSource(micStream);
             micSource.connect(destination);
         } catch (micError) {
-            console.warn("Micrófono omitido o denegado:", micError);
+            console.warn("Microphone skipped or denied:", micError);
         }
 
-        // 4. Armar stream unificado
         const combinedTrack = destination.stream.getAudioTracks()[0];
         mediaStream = new MediaStream([combinedTrack, systemStream.getVideoTracks()[0]]);
 
-        // 5. Conectar a Deepgram
         const wsUrl = `wss://api.deepgram.com/v1/listen?model=nova-2&language=${selectedLang}&punctuate=true`;
         socket = new WebSocket(wsUrl, ['token', DEEPGRAM_API_KEY]);
 
         socket.onopen = () => {
             isListening = true;
-            btn.innerText = "🛑 Stop Monitoring.";
-            status.innerText = `🟢 Escuchando Sistema ${micStream ? '+ Micrófono' : ''} (${selectedLang === 'es' ? 'Español' : 'English'})...`;
+            btn.innerHTML = "🛑 Stop Monitoring.";
+            status.innerText = `🟢 Listening to System ${micStream ? '+ Microphone' : ''} (${selectedLang === 'es' ? 'Spanish' : 'English'})...`;
             status.style.color = "#4CAF50";
 
             mediaRecorder = new MediaRecorder(mediaStream);
@@ -480,8 +461,8 @@ async function startMonitoring() {
         };
 
         socket.onerror = (error) => {
-            console.error("Error WebSocket:", error);
-            status.innerText = "❌ Error al conectar con Deepgram.";
+            console.error("WebSocket error:", error);
+            status.innerText = "❌ Connection error with Deepgram.";
             status.style.color = "#ff4d4d";
         };
 
@@ -494,8 +475,8 @@ async function startMonitoring() {
         };
 
     } catch (err) {
-        console.error("Error general en startMonitoring:", err);
-        status.innerText = "⏸️ Monitoreo cancelado o permisos denegados.";
+        console.error("General error in startMonitoring:", err);
+        status.innerText = "⏸️ Monitoring cancelled or permissions denied.";
         status.style.color = "#ffd700";
     }
 }
@@ -516,8 +497,8 @@ function stopMonitoring() {
         mediaStream = null;
     }
 
-    btn.innerText = "🎤 Start MORA";
-    status.innerText = "⏸️ Monitoring Paused";
+    btn.innerHTML = "🔑 Start Monitoring.";
+    status.innerText = "⏸️ Monitoring paused.";
     status.style.color = "#ffd700";
 }
 
@@ -607,7 +588,7 @@ function analyzeRealtime(text) {
         bsdBox.style.display = "none";
     }
 
-    debug.innerHTML = "Triggers: " + (detectedEmpathy ? "Empatía: [" + detectedEmpathy + "]" : (foundComplaints.join(", ") || "Ninguno"));
+    debug.innerHTML = "Triggers: " + (detectedEmpathy ? "Empathy: [" + detectedEmpathy + "]" : (foundComplaints.join(", ") || "None"));
 }
 
 document.addEventListener("DOMContentLoaded", function() {
