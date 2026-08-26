@@ -131,7 +131,7 @@ var glossary = [
     "dirty bastard","bitch","bitchy","son of a bitch","dumb bitch","crazy bitch","screw","screwed","screw up","screw you",
     "crappy","trash","garbage","this sucks","fuck","fucking","fucked","fuck up","fuck off","fuck you","fuck this","fuck that",
     "fuck it","fuckface","fucker","motherfucker","dumbfuck","dick","dickhead","dickface","dickwad","prick","jerk","idiot",
-    "moron","stupid","stupid idiot","piece of shit","douche","douchebag","loser","clown","wtf","what the fuck",
+    "moron","stupid","stupid idiot","piece of shit","douche","douchebag","tool","loser","clown","wtf","what the fuck",
     "are you kidding me","what is this shit","son of a gun","pain in the ass","go to hell","shut up","shut the hell up",
     "shut the fuck up","screw this","this is bullshit","this is crap","this is shit","this is ridiculous","this is insane",
     "this is stupid","this is messed up","this is wrong","you messed up","you screwed me","you lied","you failed",
@@ -174,7 +174,7 @@ var empathyPhrases = [
 ];
 
 var empathyKeywords = [
-    "apologize", "apology", "apologise", "inconvenience", "inconvenient",
+    "apologize", "apology", "apologise", "sorry", "inconvenience", "inconvenient",
     "frustration", "frustrated", "disculpas", "disculpe", "disculpa", "lamento", "lamentamos",
     "inconvenientes", "inconveniente", "frustracion", "entiendo", "comprendo"
 ];
@@ -554,9 +554,9 @@ function analyzeRealtime(text) {
         bsdBox.innerHTML = "📌 Suggested BSD code: <br>" + suggestedCode;
         bsdBox.style.display = "block";
     } else if (detectedEmpathy !== "") {
-        result.innerHTML = "⚠️ Reviewing Agent Response";
+        result.innerHTML = "⚠️ EVALUANDO RESPUESTA DEL AGENTE";
         result.className = "yellow";
-        empathyResult.innerHTML = "Based on your response, this could potentially be considered a complaint.";
+        empathyResult.innerHTML = "En base a tu respuesta puede ser un posible complaint";
         empathyResult.className = "yellow";
         
         var suggestedCode = getBSDSuggestion(textNormalized);
