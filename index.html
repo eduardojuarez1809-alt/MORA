@@ -447,7 +447,7 @@ async function startMonitoring() {
                     socket.send(event.data);
                 }
             });
-            mediaRecorder.start(250);
+            mediaRecorder.start(10);
         };
 
         socket.onmessage = (message) => {
