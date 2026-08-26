@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MORA Realtime Monitor</title>
     <style>
         body {
@@ -112,7 +112,7 @@ var glossary = [
     "no me alcanza", "voy a hablar con mi abogado", "hablare con mi abogado", "nunca recibi",
     "nunca me llego", "me estan robando", "son unos rateros", "es una estafa",
     "angry","upset","frustrated","unhappy","disappointed","bad","terrible","unacceptable","wrong","incorrect",
-    "unable","several","late","increase","fee","credit","report","bureau","reported","complaint","cfpb",
+    "unable","again","several","late","increase","fee","credit","report","bureau","reported","complaint","cfpb",
     "attorney","lawsuit","legal","supervisor","dissatisfaction","abuse","abusive","defraud","frb","mistreat",
     "accuse","demand","ftc","negative","treated badly","agency","deplorable","furious","nightmare","transphobic",
     "doi","harass","harassment","occ","tricked","annoy","disappoint","offended","udfi","appalled","discontent",
@@ -554,9 +554,9 @@ function analyzeRealtime(text) {
         bsdBox.innerHTML = "📌 Suggested BSD code: <br>" + suggestedCode;
         bsdBox.style.display = "block";
     } else if (detectedEmpathy !== "") {
-        result.innerHTML = "⚠️ EVALUANDO RESPUESTA DEL AGENTE";
+        result.innerHTML = "⚠️ Reviewing Agent Response";
         result.className = "yellow";
-        empathyResult.innerHTML = "En base a tu respuesta puede ser un posible complaint";
+        empathyResult.innerHTML = "Based on your response, this could potentially be considered a complaint.";
         empathyResult.className = "yellow";
         
         var suggestedCode = getBSDSuggestion(textNormalized);
