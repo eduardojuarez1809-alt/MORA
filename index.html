@@ -151,7 +151,7 @@ var glossary = [
     "infierno","porqueria","carajo","diablos","rayos","maldito","que demonios","maldito dios","dios mio","jesucristo",
     "mierda","mierda absoluta","locura","desaster","de mierda","basura de persona","cara de mierda","ni hablar",
     "mierda santa","orinar","muy enojado","vete al diablo","trasero","sabelotodo","imbecil","malote","basura","payaso",
-    "bastardo","bastardo flojo","bastardo sucio","perra","odiosa","hijo de perra","perrastupida","perra loca","joder",
+    "bastardo","bastardo flojo","bastardo sucio","perra","odiosa","hijo de perra","perra estupida","perra loca","joder",
     "jodido","arruinar","jodete","esto apesta","vete a la mierda","joder esto","joder eso","me importa una mierda",
     "cara de idiota","cabron","hijo de puta","estupido","idiota estupido","pedazo de mierda","bolsa de imbecil",
     "herramienta","perdedor","que carajos","me estas tomando el pelo","que es esta mierda","hijo de la gran",
@@ -180,30 +180,30 @@ var empathyKeywords = [
 ];
 
 var bsdRules = [
-    { code: "BSDFRD", label: "Fraud", keywords: ["fraud", "identity theft", "stolen", "scam", "fraude", "robo de identidad", "usurpacion"] },
-    { code: "BSDBNK", label: "Bankruptcy Issue Resolved", keywords: ["bankrupt", "bankruptcy", "chapter 7", "chapter 13", "bancarrota", "quiebra"] },
-    { code: "BSDFOR", label: "Foreclosure Issue Resolved", keywords: ["foreclosure", "sheriff sale", "seizure", "ejecucion hipotecaria", "embargo"] },
-    { code: "BSDCBR", label: "Credit Report Issue Resolved", keywords: ["credit report", "credit bureau", "equifax", "experian", "transunion", "reporte de credito", "buro de credito"] },
-    { code: "BSDACH", label: "ACH Issue Resolved", keywords: ["ach", "direct debit", "auto pay", "automatic payment", "debito automatico", "retiro automatico", "pago automatico"] },
-    { code: "BSDFEE", label: "Fee Issue Resolved", keywords: ["fee", "late fee", "charge", "penalty", "cargo", "tarifa", "comision", "multa", "cobro indebido"] },
-    { code: "BSDTAX", label: "Taxes Issues Resolved", keywords: ["tax", "taxes", "property tax", "1098", "impuesto", "impuestos", "contribuciones"] },
-    { code: "BSDINS", label: "Insurance Issue Resolved", keywords: ["insurance", "hazard insurance", "flood insurance", "policy", "seguro", "poliza", "aseguradora"] },
-    { code: "BSDESC", label: "Escrow Issue Resolved", keywords: ["escrow", "escrow account", "escrow shortage", "caja de ahorro"] },
-    { code: "BSDLOS", label: "Loss Mitigation Issue Resolved", keywords: ["loss mitigation", "loan modification", "forbearance", "workout plan", "modificacion de prestamo", "mitigacion de perdida"] },
-    { code: "BSDMIP", label: "MIP/PMI Issue Resolved", keywords: ["pmi", "mip", "private mortgage insurance", "seguro hipotecario privado"] },
-    { code: "BSDPAY", label: "Payment Issue Resolved", keywords: ["payment", "check", "posting", "afford", "can't pay", "cant pay", "pago", "cheque", "no puedo pagar", "no me alcanza"] },
-    { code: "BSDPOF", label: "Payoff Issue Resolved", keywords: ["payoff", "pay off", "payoff quote", "liquidar", "monto de liquidacion", "saldar cuenta"] },
-    { code: "BSDPFS", label: "PIF Satis. Issue Resolved", keywords: ["paid in full", "satisfaction letter", "pif", "pagado por completo", "satisfaccion de hipoteca"] },
-    { code: "BSDACM", label: "Account Maintenance Issue Resolved", keywords: ["address change", "name change", "mailing address", "account info", "actualizacion de datos", "cambio de direccion"] },
-    { code: "BSDDEF", label: "Default Issue Resolved", keywords: ["default", "delinquent", "behind on payments", "mora", "atraso", "incumplimiento"] },
-    { code: "BSDDIS", label: "Natural Disaster Issue Resolved", keywords: ["disaster", "hurricane", "storm", "flood", "wildfire", "desastre natural", "huracan", "tormenta", "inundacion"] },
-    { code: "BSDEMC", label: "Email/Chat Service Issue Resolved", keywords: ["email", "chat", "message", "correo", "mensaje"] },
-    { code: "BSDPHN", label: "Phone Service Issue Resolved", keywords: ["phone", "call", "hold time", "hung up", "representative", "telefono", "llamada", "tiempo de espera", "representante"] },
-    { code: "BSDWEB", label: "Web Issue Resolved", keywords: ["website", "online portal", "login", "password reset", "pagina web", "sitio web", "clave", "iniciar sesion"] },
-    { code: "BSDYED", label: "Year-End Issue Resolved", keywords: ["year end", "year-end", "annual statement", "1098 statement", "fin de ano", "estado de cuenta anual"] },
-    { code: "BSDDBI", label: "Deceased Borrower Process", keywords: ["deceased", "passed away", "died", "fallecido", "defuncion", "muerto"] },
-    { code: "BSDSII", label: "Successor in Interest", keywords: ["successor", "sii", "heir", "heredero", "sucesor"] },
-    { code: "BSDHEL", label: "HELOC", keywords: ["heloc", "line of credit", "linea de credito"] }
+    { code: "BSDFRD", label: "Fraud", keywords: ["fraud", "identity theft", "stolen", "scam", "fraude", "robo de identidad", "usurpacion", "unauthorized", "unauthorized charge", "phishing", "impersonation", "cargo no reconocido", "no autorice", "estafado", "tarjeta clonada"] },
+    { code: "BSDBNK", label: "Bankruptcy Issue Resolved", keywords: ["bankrupt", "bankruptcy", "chapter 7", "chapter 13", "bancarrota", "quiebra", "automatic stay", "discharge", "discharged", "court order", "declarado en quiebra", "proteccion por bancarrota"] },
+    { code: "BSDFOR", label: "Foreclosure Issue Resolved", keywords: ["foreclosure", "sheriff sale", "seizure", "ejecucion hipotecaria", "embargo", "foreclosure sale", "auction", "pre-foreclosure", "remate", "orden de embargo", "subasta"] },
+    { code: "BSDCBR", label: "Credit Report Issue Resolved", keywords: ["credit report", "credit bureau", "equifax", "experian", "transunion", "reporte de credito", "buro de credito", "dispute", "disputa", "derogatory", "late mark", "marca negativa", "historial crediticio", "inaccuracy"] },
+    { code: "BSDACH", label: "ACH Issue Resolved", keywords: ["ach", "direct debit", "auto pay", "automatic payment", "debito automatico", "retiro automatico", "pago automatico", "autopay", "eft", "electronic funds transfer", "recurrent payment", "descuento automatico"] },
+    { code: "BSDFEE", label: "Fee Issue Resolved", keywords: ["fee", "late fee", "charge", "penalty", "cargo", "tarifa", "comision", "multa", "cobro indebido", "overdraft", "nsf", "penalty fee", "processing fee", "cargo por mora", "cobro injustificado"] },
+    { code: "BSDTAX", label: "Taxes Issues Resolved", keywords: ["tax", "taxes", "property tax", "1098", "impuesto", "impuestos", "contribuciones", "tax escrow", "delinquent tax", "county tax", "impuesto de propiedad", "planilla de impuestos"] },
+    { code: "BSDINS", label: "Insurance Issue Resolved", keywords: ["insurance", "hazard insurance", "flood insurance", "policy", "seguro", "poliza", "aseguradora", "lender placed", "hazard policy", "insurance claim", "cobertura", "seguro de incendio", "seguro de inundacion"] },
+    { code: "BSDESC", label: "Escrow Issue Resolved", keywords: ["escrow", "escrow account", "escrow shortage", "caja de ahorro", "escrow surplus", "escrow analysis", "shortage", "analisis de escrow", "deficit de escrow", "balance de escrow"] },
+    { code: "BSDLOS", label: "Loss Mitigation Issue Resolved", keywords: ["loss mitigation", "loan modification", "forbearance", "workout plan", "modificacion de prestamo", "mitigacion de perdida", "deferment", "deferral", "hardship", "plan de pagos", "diferimiento", "ayuda financiera"] },
+    { code: "BSDMIP", label: "MIP/PMI Issue Resolved", keywords: ["pmi", "mip", "private mortgage insurance", "seguro hipotecario privado", "pmi removal", "pmi cancellation", "cancelar pmi", "eliminar seguro privado"] },
+    { code: "BSDPAY", label: "Payment Issue Resolved", keywords: ["payment", "check", "posting", "afford", "can't pay", "cant pay", "pago", "cheque", "no puedo pagar", "no me alcanza", "unapplied funds", "payment allocation", "misapplied payment", "pago no reflejado", "pago rechazado"] },
+    { code: "BSDPOF", label: "Payoff Issue Resolved", keywords: ["payoff", "pay off", "payoff quote", "liquidar", "monto de liquidacion", "saldar cuenta", "payoff statement", "payoff balance", "cotizacion de liquidacion", "pagar la totalidad"] },
+    { code: "BSDPFS", label: "PIF Satis. Issue Resolved", keywords: ["paid in full", "satisfaction letter", "pif", "pagado por completo", "satisfaccion de hipoteca", "release of lien", "deed of reconveyance", "liberacion de gravamen", "carta de saldo"] },
+    { code: "BSDACM", label: "Account Maintenance Issue Resolved", keywords: ["address change", "name change", "mailing address", "account info", "actualizacion de datos", "cambio de direccion", "update profile", "contact information", "cambio de nombre", "corregir datos"] },
+    { code: "BSDDEF", label: "Default Issue Resolved", keywords: ["default", "delinquent", "behind on payments", "mora", "atraso", "incumplimiento", "past due", "30 days late", "60 days late", "atrasado", "cuotas vencidas"] },
+    { code: "BSDDIS", label: "Natural Disaster Issue Resolved", keywords: ["disaster", "hurricane", "storm", "flood", "wildfire", "desastre natural", "huracan", "tormenta", "inundacion", "fema", "tornado", "earthquake", "emergencia declarada", "terremoto"] },
+    { code: "BSDEMC", label: "Email/Chat Service Issue Resolved", keywords: ["email", "chat", "message", "correo", "mensaje", "secure messaging", "no me llega el correo", "error de chat", "correo electronico"] },
+    { code: "BSDPHN", label: "Phone Service Issue Resolved", keywords: ["phone", "call", "hold time", "hung up", "representative", "telefono", "llamada", "tiempo de espera", "representante", "dropped call", "me colgaron", "mucha espera", "transfer"] },
+    { code: "BSDWEB", label: "Web Issue Resolved", keywords: ["website", "online portal", "login", "password reset", "pagina web", "sitio web", "clave", "iniciar sesion", "mobile app", "portal no funciona", "error en la app", "bloqueo de cuenta"] },
+    { code: "BSDYED", label: "Year-End Issue Resolved", keywords: ["year end", "year-end", "annual statement", "1098 statement", "fin de ano", "estado de cuenta anual", "tax form 1098", "declaracion anual"] },
+    { code: "BSDDBI", label: "Deceased Borrower Process", keywords: ["deceased", "passed away", "died", "fallecido", "defuncion", "muerto", "death certificate", "borrower died", "acta de defuncion", "titular fallecido"] },
+    { code: "BSDSII", label: "Successor in Interest", keywords: ["successor", "sii", "heir", "heredero", "sucesor", "successor in interest", "herencia", "beneficiario legal"] },
+    { code: "BSDHEL", label: "HELOC", keywords: ["heloc", "line of credit", "linea de credito", "home equity", "draw period", "credito con garantia"] }
 ];
 
 // ==========================================
@@ -234,7 +234,6 @@ function maskSensitiveData(text) {
 
 function checkEmpathy(textNormalized) {
     var falsePositiveContexts = [
-        // Fallas técnicas y de audio
         "audio issue", "audio issues", "technical issue", "technical issues", "tech issue", "tech issues",
         "connection issue", "connection issues", "system issue", "system issues", "system slow", "system lag",
         "headset issue", "headset issues", "microphone issue", "mic issue", "bad connection", "line issue",
@@ -243,43 +242,32 @@ function checkEmpathy(textNormalized) {
         "falla de audio", "fallas de audio", "problema de audio", "problemas de audio", "problema tecnico",
         "problemas tecnicos", "fallas tecnicas", "falla de sistema", "sistema lento", "se traba el sistema",
         "no lo escucho", "no la escucho", "se escucha entrecortado", "ruido en la linea", "mala conexion",
-
-        // Interrupciones y cortes al hablar
         "sorry go ahead", "sorry you go first", "sorry I cut you off", "sorry to interrupt",
         "sorry didn't catch that", "sorry come again", "sorry what did you say", "sorry pardon",
         "disculpe hable usted", "disculpe no le escuche", "disculpe que lo interrumpa", "disculpe repetiria",
         "perdon no escuche", "perdon que dijo", "disculpe la interrupcion",
-
-        // Errores triviales y corrección de datos
         "my mistake", "my bad", "i was wrong", "wrong button", "wrong number", "wrong key",
         "typed the wrong", "said the wrong", "i meant to say", "sorry wrong account", "sorry wrong date",
         "mi error", "error mio", "me equivoque", "dije mal", "marque mal", "numero equivocado",
         "boton equivocado", "quise decir", "disculpe me equivoque",
-
-        // Tiempos de espera de rutina
         "sorry for the hold", "sorry to keep you waiting", "sorry for the wait", "takes a second to load",
         "system is loading", "pulling up your account", "looking for the option", "bear with me",
         "disculpe la espera", "disculpe la demora", "el sistema esta cargando", "buscando su informacion",
         "un segundo por favor", "gracias por la espera",
-
-        // Cortesías generales cortas
         "sorry about that", "sorry for that", "disculpe por eso", "perdon por eso"
     ];
 
-    // 1. Filtrar si se detecta cualquier contexto de falso positivo
     for (var f = 0; f < falsePositiveContexts.length; f++) {
         if (textNormalized.indexOf(falsePositiveContexts[f]) !== -1) {
             return ""; 
         }
     }
 
-    // 2. Frases de empatía compuestas explícitas
     for (var i = 0; i < empathyPhrases.length; i++) {
         var termNorm = normalize(empathyPhrases[i]);
         if (textNormalized.indexOf(termNorm) !== -1) return empathyPhrases[i];
     }
 
-    // 3. Verificación de ventana cercana para palabras sueltas
     var found = [];
     for (var k = 0; k < empathyKeywords.length; k++) {
         var keyNorm = normalize(empathyKeywords[k]);
@@ -304,30 +292,56 @@ function checkEmpathy(textNormalized) {
 }
 
 function getBSDSuggestion(textNormalized) {
-    var bestMatch = null;
-    var maxScore = 0;
+    var ruleScores = [];
 
     for (var i = 0; i < bsdRules.length; i++) {
-        var ruleScore = 0;
-        var matchedKeys = [];
+        var currentRule = bsdRules[i];
+        var totalScore = 0;
+        var matchedKeysMap = {};
 
-        for (var k = 0; k < bsdRules[i].keywords.length; k++) {
-            var ruleKeyNorm = normalize(bsdRules[i].keywords[k]);
-            if (textNormalized.indexOf(ruleKeyNorm) !== -1) {
-                ruleScore++;
-                matchedKeys.push(bsdRules[i].keywords[k]);
+        for (var k = 0; k < currentRule.keywords.length; k++) {
+            var ruleKeyNorm = normalize(currentRule.keywords[k]);
+            
+            if (ruleKeyNorm.length > 0) {
+                var escapedKey = ruleKeyNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                var regex = new RegExp("\\b" + escapedKey + "\\b", "g");
+                var matches = textNormalized.match(regex);
+
+                if (matches) {
+                    totalScore += matches.length;
+                    matchedKeysMap[currentRule.keywords[k]] = (matchedKeysMap[currentRule.keywords[k]] || 0) + matches.length;
+                }
             }
         }
 
-        if (ruleScore > maxScore) {
-            maxScore = ruleScore;
-            bestMatch = { rule: bsdRules[i], matchedKeys: matchedKeys };
+        if (totalScore > 0) {
+            var matchedKeysFormatted = [];
+            for (var key in matchedKeysMap) {
+                matchedKeysFormatted.push(key + " (" + matchedKeysMap[key] + ")");
+            }
+
+            ruleScores.push({
+                rule: currentRule,
+                score: totalScore,
+                matchedKeys: matchedKeysFormatted
+            });
         }
     }
 
-    if (bestMatch && maxScore > 0) {
-        return "<strong>" + bestMatch.rule.code + "</strong> — Borrower States Dissatisfaction - " + bestMatch.rule.label + 
-               "<br><small style='color:#aaa;'>Match detected by: [" + bestMatch.matchedKeys.join(", ") + "]</small>";
+    ruleScores.sort(function(a, b) {
+        return b.score - a.score;
+    });
+
+    if (ruleScores.length > 0) {
+        var topMatch = ruleScores[0];
+        var output = "<strong>" + topMatch.rule.code + "</strong> — Borrower States Dissatisfaction - " + topMatch.rule.label + 
+                     "<br><small style='color:#aaa;'>Coincidencias acumuladas: [" + topMatch.matchedKeys.join(", ") + "]</small>";
+
+        if (ruleScores.length > 1 && ruleScores[1].score > 0) {
+            output += "<br><small style='color:#ffc107;'>Alternativa detectada: <strong>" + ruleScores[1].rule.code + "</strong> (" + ruleScores[1].rule.label + ")</small>";
+        }
+
+        return output;
     }
 
     return "<strong>BSDPAY</strong> — Borrower States Dissatisfaction - Payment Issue Resolved (Sugerido por defecto)";
@@ -364,7 +378,6 @@ async function startMonitoring() {
         status.innerText = "⏳ Selecciona la ventana y activa 'Compartir audio del sistema'...";
         status.style.color = "#ffd700";
 
-        // Capturar audio del sistema (pantalla/pestaña)
         const systemStream = await navigator.mediaDevices.getDisplayMedia({
             video: true,
             audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
@@ -378,7 +391,6 @@ async function startMonitoring() {
             return;
         }
 
-        // Inicializar AudioContext
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
             await audioContext.resume();
@@ -388,7 +400,6 @@ async function startMonitoring() {
         const systemSource = audioContext.createMediaStreamSource(new MediaStream([systemAudioTrack]));
         systemSource.connect(destination);
 
-        // Intentar agregar micrófono
         let micStream = null;
         try {
             micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
