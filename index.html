@@ -11,7 +11,6 @@ body {
     color: #e0e0e0;
 }
 
-/* TITULO PRINCIPAL M.O.R.A PROJECT */
 h2 {
     font-size: 34px;
     font-weight: 900;
@@ -43,9 +42,7 @@ h2 {
     align-items: center;
     gap: 6px;
 }
-#btn-start:hover {
-    background-color: #ffe44d;
-}
+#btn-start:hover { background-color: #ffe44d; }
 
 #btn-reset {
     background-color: #00bcd4;
@@ -60,9 +57,7 @@ h2 {
     align-items: center;
     gap: 6px;
 }
-#btn-reset:hover {
-    background-color: #33d0e1;
-}
+#btn-reset:hover { background-color: #33d0e1; }
 
 #lang-select {
     background-color: #1a1a1a;
@@ -161,9 +156,9 @@ mark.highlight-trigger {
 <h2>M.O.R.A PROJECT</h2>
 
 <div class="controls-container">
-    <button id="btn-start">🟢 Start Monitoring.</button>
-    <button id="btn-reset">🔄 Restart MORA</button>
-    <select id="lang-select">
+    <button id="btn-start" onclick="toggleMonitoring()">🟢 Start Monitoring.</button>
+    <button id="btn-reset" onclick="resetTranscript()">🔄 Restart MORA</button>
+    <select id="lang-select" onchange="handleLanguageChange()">
         <option value="en">🇺🇸 English</option>
         <option value="es">🇲🇽 Español</option>
     </select>
@@ -186,11 +181,22 @@ mark.highlight-trigger {
 const DEEPGRAM_API_KEY = "6ac125a3e51eb51126c7636b1f1477b4480b068b"; 
 
 var socket = null;
-var mediaRecorder = null;
-var mediaStream = null;
 var audioContext = null;
+var processorNode = null;
 var isListening = false;
-var fullTranscriptHistory = "";
+var rawTranscriptHistory = "";
+
+// Frases de apertura para activar auto-reset
+var openingPhrases = [
+    "my name is",
+    "how can i help you",
+    "how may i help you",
+    "how can i assist you",
+    "mi nombre es",
+    "en que le puedo ayudar",
+    "como le puedo ayudar",
+    "como le puedo asistir"
+];
 
 var glossary = [
     "don't understand", "dont understand", "do not understand", "doesn't make sense", "doesnt make sense",
@@ -246,7 +252,42 @@ var glossary = [
     "dolor en el trasero","vete al infierno","callate","callate al demonio","callate la mierda","a la mierda con esto",
     "esto es mierda","esto es porqueria","esto es ridiculo","esto es una locura","esto es estupido","esto esta mal hecho",
     "esto esta mal","la arruinaste","me arruinaste","mentiste","fallaste","no te importa","increible","indignante",
-    "frustrante","enojo","enfurecedor","violando","puta","puto"
+    "frustrante","enojo","enfurecedor","violando","puta","puto",
+    "no me dejo", "no me deja", "no me permitio", "no me permite", "no me dio acceso", "no me deja entrar",
+    "no me dejo entrar", "no me deja ingresar", "no me dejo ingresar", "no me deja avanzar", "no me dejo avanzar",
+    "no me deja pagar", "no me dejo pagar", "no me deja hacer el pago", "no me dejo hacer el pago",
+    "no me deja procesar", "no me dejo procesar", "no me deja continuar", "no me dejo continuar",
+    "no me deja guardar", "no me dejo guardar", "no me deja enviar", "no me dejo enviar",
+    "no me deja cambiar", "no me dejo cambiar", "no me deja actualizar", "no me dejo actualizar",
+    "no me deja seleccionar", "no me dejo seleccionar", "no me deja iniciar sesion", "no me dejo iniciar sesion",
+    "no me deja hacer nada", "no me dejo hacer nada", "no me deja hacer la transaccion", "no me dejo hacer la transaccion",
+    "no me deja completar", "no me dejo completar", "el sistema no me deja", "el sistema no me dejo",
+    "la pagina no me deja", "la pagina no me dejo", "la aplicacion no me deja", "la app no me deja",
+    "la aplicacion no me dejo", "la app no me dejo", "el sitio no me deja", "el sitio no me dejo",
+    "no me lo permitio", "no me da opcion", "no me dio opcion", "no me da acceso", "no me dio acceso",
+    "no me reconoce la contraseña", "no me acepta la clave", "no me acepta la tarjeta", "no me acepta el pago",
+    "me saca del sistema", "me saco del sistema", "me rebota el pago", "me rebotó el pago",
+    "me marca error", "me marco error", "me da error", "me dio error", "me sale un error", "me salio un error",
+    "me aparece un error", "me aparecio un error", "me bloquea", "me bloqueo", "me tiene bloqueado",
+    "me rechaza la transaccion", "me rechazo el pago", "no me da acceso a la cuenta", "no me permite pagar",
+    "didn't let me", "does not let me", "doesn't let me", "won't let me", "wouldn't let me",
+    "didn't allow me", "does not allow me", "doesn't allow me", "won't allow me", "wouldn't allow me",
+    "didn't let me log in", "doesn't let me log in", "won't let me log in", "wouldn't let me log in",
+    "didn't let me sign in", "doesn't let me sign in", "won't let me sign in",
+    "didn't let me pay", "doesn't let me pay", "won't let me pay", "wouldn't let me pay",
+    "didn't let me make the payment", "doesn't let me make the payment", "won't let me make payment",
+    "didn't let me submit", "doesn't let me submit", "won't let me submit",
+    "didn't let me proceed", "doesn't let me proceed", "won't let me proceed",
+    "didn't let me continue", "doesn't let me continue", "won't let me continue",
+    "didn't let me complete", "doesn't let me complete", "won't let me complete",
+    "didn't let me update", "doesn't let me update", "won't let me update",
+    "didn't let me save", "doesn't let me save", "won't let me save",
+    "didn't let me select", "doesn't let me select", "won't let me select",
+    "didn't let me access", "doesn't let me access", "won't let me access",
+    "system didn't let me", "system won't let me", "system doesn't let me",
+    "website won't let me", "app won't let me", "page won't let me",
+    "it gives me an error", "it gave me an error", "it keeps giving me an error",
+    "it kicked me out", "it locked me out", "my account is locked", "i'm locked out"
 ];
 
 var empathyPhrases = [
@@ -268,33 +309,34 @@ var empathyKeywords = [
 ];
 
 var bsdRules = [
-    { code: "BSDFRD", label: "Fraud", keywords: ["fraud", "identity theft", "stolen", "scam", "fraude", "robo de identidad", "usurpacion"] },
-    { code: "BSDBNK", label: "Bankruptcy Issue Resolved", keywords: ["bankrupt", "bankruptcy", "chapter 7", "chapter 13", "bancarrota", "quiebra"] },
-    { code: "BSDFOR", label: "Foreclosure Issue Resolved", keywords: ["foreclosure", "sheriff sale", "seizure", "ejecucion hipotecaria", "embargo"] },
-    { code: "BSDCBR", label: "Credit Report Issue Resolved", keywords: ["credit report", "credit bureau", "equifax", "experian", "transunion", "reporte de credito", "buro de credito"] },
-    { code: "BSDACH", label: "ACH Issue Resolved", keywords: ["ach", "direct debit", "auto pay", "automatic payment", "debito automatico", "retiro automatico", "pago automatico"] },
-    { code: "BSDFEE", label: "Fee Issue Resolved", keywords: ["fee", "late fee", "charge", "penalty", "cargo", "tarifa", "comision", "multa", "cobro indebido"] },
+    { code: "BSDFRD", label: "Fraud", keywords: ["fraud", "identity theft", "stolen", "scam", "fraude", "robo de identidad", "usurpacion", "unauthorized", "suspicious activity", "compromised", "phishing", "fake", "forged", "unauthorized charge", "fraudulent"] },
+    { code: "BSDBNK", label: "Bankruptcy Issue Resolved", keywords: ["bankrupt", "bankruptcy", "chapter 7", "chapter 13", "bancarrota", "quiebra", "discharge", "automatic stay"] },
+    { code: "BSDFOR", label: "Foreclosure Issue Resolved", keywords: ["foreclosure", "sheriff sale", "seizure", "ejecucion hipotecaria", "embargo", "auction date", "foreclosure attorney"] },
+    { code: "BSDCBR", label: "Credit Report Issue Resolved", keywords: ["credit report", "credit bureau", "equifax", "experian", "transunion", "reporte de credito", "buro de credito", "late payment reported", "credit score dropped"] },
+    { code: "BSDACH", label: "ACH Issue Resolved", keywords: ["ach", "direct debit", "auto pay", "automatic payment", "debito automatico", "retiro automatico", "pago automatico", "autopay failed", "double debit"] },
+    { code: "BSDFEE", label: "Fee Issue Resolved", keywords: ["fee", "late fee", "charge", "penalty", "cargo", "tarifa", "comision", "multa", "cobro indebido", "waive fee"] },
     { code: "BSDTAX", label: "Taxes Issues Resolved", keywords: ["tax", "taxes", "property tax", "1098", "impuesto", "impuestos", "contribuciones"] },
     { code: "BSDINS", label: "Insurance Issue Resolved", keywords: ["insurance", "hazard insurance", "flood insurance", "policy", "seguro", "poliza", "aseguradora"] },
-    { code: "BSDESC", label: "Escrow Issue Resolved", keywords: ["escrow", "escrow account", "escrow shortage", "caja de ahorro"] },
+    { code: "BSDESC", label: "Escrow Issue Resolved", keywords: ["escrow", "escrow account", "escrow shortage", "caja de ahorro", "escrow surplus", "escrow analysis"] },
     { code: "BSDLOS", label: "Loss Mitigation Issue Resolved", keywords: ["loss mitigation", "loan modification", "forbearance", "workout plan", "modificacion de prestamo", "mitigacion de perdida"] },
-    { code: "BSDMIP", label: "MIP/PMI Issue Resolved", keywords: ["pmi", "mip", "private mortgage insurance", "seguro hipotecario privado"] },
+    { code: "BSDMIP", label: "MIP/PMI Issue Resolved", keywords: ["pmi", "mip", "private mortgage insurance", "seguro hipotecario privado", "pmi removal", "cancel pmi"] },
     { code: "BSDPAY", label: "Payment Issue Resolved", keywords: ["payment", "check", "posting", "afford", "can't pay", "cant pay", "pago", "cheque", "no puedo pagar", "no me alcanza"] },
     { code: "BSDPOF", label: "Payoff Issue Resolved", keywords: ["payoff", "pay off", "payoff quote", "liquidar", "monto de liquidacion", "saldar cuenta"] },
     { code: "BSDPFS", label: "PIF Satis. Issue Resolved", keywords: ["paid in full", "satisfaction letter", "pif", "pagado por completo", "satisfaccion de hipoteca"] },
     { code: "BSDACM", label: "Account Maintenance Issue Resolved", keywords: ["address change", "name change", "mailing address", "account info", "actualizacion de datos", "cambio de direccion"] },
-    { code: "BSDDEF", label: "Default Issue Resolved", keywords: ["default", "delinquent", "behind on payments", "mora", "atraso", "incumplimiento"] },
-    { code: "BSDDIS", label: "Natural Disaster Issue Resolved", keywords: ["disaster", "hurricane", "storm", "flood", "wildfire", "desastre natural", "huracan", "tormenta", "inundacion"] },
-    { code: "BSDEMC", label: "Email/Chat Service Issue Resolved", keywords: ["email", "chat", "message", "correo", "mensaje"] },
-    { code: "BSDPHN", label: "Phone Service Issue Resolved", keywords: ["phone", "call", "hold time", "hung up", "representative", "telefono", "llamada", "tiempo de espera", "representante"] },
+    { code: "BSDDEF", label: "Default Issue Resolved", keywords: ["default", "delinquent", "behind on payments", "mora", "atraso", "incumplimiento", "past due"] },
+    { code: "BSDDIS", label: "Natural Disaster Issue Resolved", keywords: ["disaster", "hurricane", "storm", "flood", "wildfire", "desastre natural", "huracan", "tormenta"] },
+    { code: "BSDEMC", label: "Email/Chat Service Issue Resolved", keywords: ["email", "chat", "message", "correo", "mensaje", "secure message", "webchat"] },
+    { code: "BSDPHN", label: "Phone Service Issue Resolved", keywords: ["phone", "call", "hold time", "hung up", "representative", "telefono", "llamada", "tiempo de espera"] },
     { code: "BSDWEB", label: "Web Issue Resolved", keywords: ["website", "online portal", "login", "password reset", "pagina web", "sitio web", "clave", "iniciar sesion"] },
-    { code: "BSDYED", label: "Year-End Issue Resolved", keywords: ["year end", "year-end", "annual statement", "1098 statement", "fin de ano", "estado de cuenta anual"] },
+    { code: "BSDYED", label: "Year-End Issue Resolved", keywords: ["year end", "year-end", "annual statement", "1098 statement", "fin de ano"] },
     { code: "BSDDBI", label: "Deceased Borrower Process", keywords: ["deceased", "passed away", "died", "fallecido", "defuncion", "muerto"] },
-    { code: "BSDSII", label: "Successor in Interest", keywords: ["successor", "sii", "heir", "heredero", "sucesor"] },
-    { code: "BSDHEL", label: "HELOC", keywords: ["heloc", "line of credit", "linea de credito"] }
+    { code: "BSDSII", label: "Successor in Interest", keywords: ["successor", "sii", "heir", "heredero", "sucesor", "successor in interest"] },
+    { code: "BSDHEL", label: "HELOC", keywords: ["heloc", "line of credit", "linea de credito", "home equity"] }
 ];
 
 function normalize(text) {
+    if (!text) return "";
     return text.toLowerCase()
         .replace(/[áàä]/g, "a")
         .replace(/[éèë]/g, "e")
@@ -309,13 +351,25 @@ function normalize(text) {
 }
 
 function maskSensitiveData(text) {
+    if (!text) return "";
     return text
         .replace(/\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g, '***-**-****')
+        .replace(/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{1,7}\b/g, '****-****-****-****')
         .replace(/(\$|usd\s?)\d+(?:,\d{3})*(?:\.\d{1,2})?/gi, '***')
-        .replace(/\b\d+\b/g, '****')
-        .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/gi, '*')
-        .replace(/\b(cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|diecisiete|dieciocho|diecinueve|veinte|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)\b/gi, '*')
-        .replace(/\b(hundred|thousand|million|billion|dollar|dollars|cent|cents|dolar|dolares|ciento|cientos|mil|millon|millones)\b/gi, '***');
+        .replace(/(?:\+?1[-\s]?)?\(?\d{3}\)?[-\s]?\d{3}[-\s]?\d{4}/g, '***-***-****')
+        .replace(/\b\d{4,}\b/g, '****')
+        .replace(/\b\d{1,3}\b/g, '*')
+        .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|dollar|dollars|cent|cents)\b/gi, '*')
+        .replace(/\b(cero|uno|una|unos|unas|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|diecisiete|dieciocho|diecinueve|veinte|veintiuno|veintidos|veintidós|veintitres|veintitrés|veinticinco|veintiseis|veintisiete|veintiocho|veintinueve|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa|ciento|cientos|cien|quinientos|seiscientos|setecientos|ochocientos|novecientos|mil|millon|millones|dolar|dolares|centavo|centavos)\b/gi, '*');
+}
+
+function checkOpeningPhrase(textNormalized) {
+    for (var i = 0; i < openingPhrases.length; i++) {
+        if (textNormalized.indexOf(openingPhrases[i]) !== -1) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function checkEmpathy(textNormalized) {
@@ -349,10 +403,7 @@ function getBSDSuggestion(textNormalized) {
 
         if (ruleScore > maxScore) {
             maxScore = ruleScore;
-            bestMatch = {
-                rule: bsdRules[i],
-                matchedKeys: matchedKeys
-            };
+            bestMatch = { rule: bsdRules[i], matchedKeys: matchedKeys };
         }
     }
 
@@ -362,144 +413,6 @@ function getBSDSuggestion(textNormalized) {
     }
 
     return "<strong>BSDPAY</strong> — Borrower States Dissatisfaction - Payment Issue Resolved (Suggested by default)";
-}
-
-function resetTranscript() {
-    fullTranscriptHistory = "";
-    document.getElementById("transcript-box").innerHTML = "";
-    document.getElementById("result").innerHTML = "";
-    document.getElementById("empathy-result").innerHTML = "";
-    document.getElementById("bsd-suggestion").style.display = "none";
-    document.getElementById("bsd-suggestion").innerHTML = "";
-    document.getElementById("alerta").innerHTML = "";
-    document.getElementById("debug").innerHTML = "";
-}
-
-function toggleMonitoring() {
-    if (isListening) {
-        stopMonitoring();
-    } else {
-        startMonitoring();
-    }
-}
-
-async function startMonitoring() {
-    var btn = document.getElementById("btn-start");
-    var status = document.getElementById("status");
-    var selectedLang = document.getElementById("lang-select").value;
-
-    try {
-        status.innerText = "⏳ 1/2: Select screen/tab and enable 'Share system audio'...";
-        status.style.color = "#ffd700";
-
-        const systemStream = await navigator.mediaDevices.getDisplayMedia({
-            video: true,
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
-            }
-        });
-
-        const systemAudioTrack = systemStream.getAudioTracks()[0];
-        if (!systemAudioTrack) {
-            alert("⚠️ Important: You must check 'Share system audio' in the popup window.");
-            systemStream.getTracks().forEach(t => t.stop());
-            status.innerText = "⏸️ Monitoring cancelled or permissions denied.";
-            return;
-        }
-
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
-
-        const destination = audioContext.createMediaStreamDestination();
-        const systemSource = audioContext.createMediaStreamSource(new MediaStream([systemAudioTrack]));
-        systemSource.connect(destination);
-
-        status.innerText = "⏳ 2/2: Authorize microphone access...";
-        
-        let micStream = null;
-        try {
-            micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const micSource = audioContext.createMediaStreamSource(micStream);
-            micSource.connect(destination);
-        } catch (micError) {
-            console.warn("Microphone skipped or denied:", micError);
-        }
-
-        const combinedTrack = destination.stream.getAudioTracks()[0];
-        mediaStream = new MediaStream([combinedTrack, systemStream.getVideoTracks()[0]]);
-
-        const wsUrl = `wss://api.deepgram.com/v1/listen?model=nova-2&language=${selectedLang}&punctuate=true`;
-        socket = new WebSocket(wsUrl, ['token', DEEPGRAM_API_KEY]);
-
-        socket.onopen = () => {
-            isListening = true;
-            btn.innerHTML = "🛑 Stop Monitoring.";
-            status.innerText = `🟢 Listening to System ${micStream ? '+ Microphone' : ''} (${selectedLang === 'es' ? 'Spanish' : 'English'})...`;
-            status.style.color = "#4CAF50";
-
-            mediaRecorder = new MediaRecorder(mediaStream);
-            mediaRecorder.addEventListener('dataavailable', event => {
-                if (event.data.size > 0 && socket.readyState === 1) {
-                    socket.send(event.data);
-                }
-            });
-            mediaRecorder.start(10);
-        };
-
-        socket.onmessage = (message) => {
-            const received = JSON.parse(message.data);
-            const transcript = received.channel?.alternatives[0]?.transcript;
-
-            if (transcript && transcript.trim().length > 0) {
-                fullTranscriptHistory += " " + transcript;
-                analyzeRealtime(fullTranscriptHistory);
-            }
-        };
-
-        socket.onerror = (error) => {
-            console.error("WebSocket error:", error);
-            status.innerText = "❌ Connection error with Deepgram.";
-            status.style.color = "#ff4d4d";
-        };
-
-        socket.onclose = () => {
-            if (isListening) stopMonitoring();
-        };
-
-        systemStream.getVideoTracks()[0].onended = () => {
-            stopMonitoring();
-        };
-
-    } catch (err) {
-        console.error("General error in startMonitoring:", err);
-        status.innerText = "⏸️ Monitoring cancelled or permissions denied.";
-        status.style.color = "#ffd700";
-    }
-}
-
-function stopMonitoring() {
-    isListening = false;
-    var btn = document.getElementById("btn-start");
-    var status = document.getElementById("status");
-
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-    if (socket && socket.readyState === 1) socket.close();
-    if (audioContext) {
-        audioContext.close();
-        audioContext = null;
-    }
-    if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        mediaStream = null;
-    }
-
-    btn.innerHTML = "🔑 Start Monitoring.";
-    status.innerText = "⏸️ Monitoring paused.";
-    status.style.color = "#ffd700";
 }
 
 async function handleLanguageChange() {
@@ -591,15 +504,166 @@ function analyzeRealtime(text) {
     debug.innerHTML = "Triggers: " + (detectedEmpathy ? "Empathy: [" + detectedEmpathy + "]" : (foundComplaints.join(", ") || "None"));
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    var btnStart = document.getElementById("btn-start");
-    var btnReset = document.getElementById("btn-reset");
-    var langSelect = document.getElementById("lang-select");
+function resetTranscript() {
+    rawTranscriptHistory = "";
+    document.getElementById("transcript-box").innerHTML = "";
+    document.getElementById("result").innerHTML = "";
+    document.getElementById("empathy-result").innerHTML = "";
+    document.getElementById("bsd-suggestion").style.display = "none";
+    document.getElementById("bsd-suggestion").innerHTML = "";
+    document.getElementById("alerta").innerHTML = "";
+    document.getElementById("debug").innerHTML = "";
+}
 
-    if (btnStart) btnStart.addEventListener("click", toggleMonitoring);
-    if (btnReset) btnReset.addEventListener("click", resetTranscript);
-    if (langSelect) langSelect.addEventListener("change", handleLanguageChange);
-});
+function toggleMonitoring() {
+    if (isListening) {
+        stopMonitoring();
+    } else {
+        startMonitoring();
+    }
+}
+
+// Convertidor de Audio a PCM Linear16 de 16-bit
+function convertFloat32ToInt16(buffer) {
+    let l = buffer.length;
+    let buf = new Int16Array(l);
+    while (l--) {
+        let s = Math.max(-1, Math.min(1, buffer[l]));
+        buf[l] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+    return buf.buffer;
+}
+
+async function startMonitoring() {
+    var btn = document.getElementById("btn-start");
+    var status = document.getElementById("status");
+    var selectedLang = document.getElementById("lang-select").value;
+
+    try {
+        status.innerText = "⏳ 1/2: Select screen/tab and enable 'Share system audio'...";
+        status.style.color = "#ffd700";
+
+        const systemStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+
+        const systemAudioTrack = systemStream.getAudioTracks()[0];
+        if (!systemAudioTrack) {
+            alert("⚠️ Important: You must check 'Share system audio' in the popup window.");
+            systemStream.getTracks().forEach(t => t.stop());
+            status.innerText = "⏸️ Monitoring paused.";
+            return;
+        }
+
+        status.innerText = "⏳ 2/2: Requesting microphone access (Agent)...";
+
+        const micStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const sampleRate = audioContext.sampleRate;
+
+        const merger = audioContext.createChannelMerger(2);
+        const micSource = audioContext.createMediaStreamSource(micStream);
+        const systemSource = audioContext.createMediaStreamSource(systemStream);
+
+        micSource.connect(merger, 0, 0);       // Canal 0: Agente
+        systemSource.connect(merger, 0, 1);    // Canal 1: Cliente
+
+        var langCode = (selectedLang === "es") ? "es" : "en-US";
+        var wsUrl = "wss://api.deepgram.com/v1/listen?encoding=linear16&sample_rate=" + sampleRate + "&channels=2&multichannel=true&language=" + langCode + "&model=nova-2";
+
+        socket = new WebSocket(wsUrl, ["token", DEEPGRAM_API_KEY]);
+
+        socket.onopen = function() {
+            status.innerText = "🟢 Active Monitoring...";
+            status.style.color = "#00e676";
+            btn.innerText = "🔴 Stop Monitoring";
+            isListening = true;
+
+            // Procesador en tiempo real para convertir muestras a PCM
+            processorNode = audioContext.createScriptProcessor(4096, 2, 2);
+            merger.connect(processorNode);
+            processorNode.connect(audioContext.destination);
+
+            processorNode.onaudioprocess = function(e) {
+                if (!isListening || socket.readyState !== 1) return;
+
+                const left = e.inputBuffer.getChannelData(0);
+                const right = e.inputBuffer.getChannelData(1);
+
+                // Intercalar canales estéreo (Canal 0 Agente, Canal 1 Cliente)
+                const interleaved = new Float32Array(left.length + right.length);
+                for (let i = 0; i < left.length; i++) {
+                    interleaved[i * 2] = left[i];
+                    interleaved[i * 2 + 1] = right[i];
+                }
+
+                const pcmBuffer = convertFloat32ToInt16(interleaved);
+                socket.send(pcmBuffer);
+            };
+        };
+
+        socket.onmessage = function(msg) {
+            var data = JSON.parse(msg.data);
+            if (data.channel && data.channel.alternatives && data.channel.alternatives[0]) {
+                var transcript = data.channel.alternatives[0].transcript;
+                if (transcript && transcript.trim().length > 0) {
+                    var channelIdx = (data.channel_index && data.channel_index.length > 0) ? data.channel_index[0] : 0;
+                    var speaker = (channelIdx === 0) ? "Agent" : "Borrower";
+                    
+                    var normFragment = normalize(transcript);
+
+                    // Auto-reset si el Agente dice una frase de opening
+                    if (speaker === "Agent" && checkOpeningPhrase(normFragment)) {
+                        resetTranscript();
+                    }
+
+                    rawTranscriptHistory += "[" + speaker + "]: " + transcript + "<br>";
+                    analyzeRealtime(rawTranscriptHistory);
+                }
+            }
+        };
+
+        socket.onerror = function(err) {
+            console.error("WebSocket Error:", err);
+            stopMonitoring();
+        };
+
+        socket.onclose = function() {
+            if (isListening) stopMonitoring();
+        };
+
+    } catch (err) {
+        console.error("Error starting monitoring:", err);
+        status.innerText = "❌ Error accessing audio source.";
+        status.style.color = "#ff4d4d";
+        isListening = false;
+    }
+}
+
+function stopMonitoring() {
+    var btn = document.getElementById("btn-start");
+    var status = document.getElementById("status");
+
+    if (processorNode) {
+        processorNode.disconnect();
+        processorNode = null;
+    }
+    if (socket && socket.readyState === 1) {
+        socket.close();
+    }
+    if (audioContext) {
+        audioContext.close();
+    }
+
+    isListening = false;
+    status.innerText = "⏸️ Monitoring paused.";
+    status.style.color = "#ffd700";
+    btn.innerText = "🟢 Start Monitoring.";
+}
 </script>
 </body>
 </html>
