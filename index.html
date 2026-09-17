@@ -567,8 +567,8 @@ async function startMonitoring() {
         micSource.connect(merger, 0, 0);       // Canal 0: Agente
         systemSource.connect(merger, 0, 1);    // Canal 1: Cliente
 
-        // CONEXIÓN AL PROXY LOCAL
-        var wsUrl = "ws://localhost:8080";
+        // CONEXIÓN AL PROXY EN TU LAPTOP SERVIDORA (10.80.66.56:8080)
+        var wsUrl = "ws://10.80.66.56:8080";
         socket = new WebSocket(wsUrl);
 
         socket.onopen = function() {
