@@ -1,660 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Mortgage Observation & Response Assistant</title>
-<style>
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 30px;
-    background-color: #0d0d0d;
-    color: #e0e0e0;
-}
-
-h2 {
-    font-size: 34px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    background: linear-gradient(135deg, #fff7ad 0%, #ffd700 50%, #c59b27 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 25px;
-    text-transform: uppercase;
-}
-
-.controls-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-#btn-start {
-    background-color: #ffd700;
-    color: #000;
-    font-weight: bold;
-    padding: 10px 18px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-#btn-start:hover { background-color: #ffe44d; }
-
-#btn-reset {
-    background-color: #00bcd4;
-    color: #fff;
-    font-weight: bold;
-    padding: 10px 18px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-#btn-reset:hover { background-color: #33d0e1; }
-
-#lang-select {
-    background-color: #1a1a1a;
-    color: #ffd700;
-    border: 1px solid #ffd700;
-    padding: 9px 12px;
-    font-size: 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    outline: none;
-}
-
-#status {
-    font-size: 18px;
-    font-weight: bold;
-    color: #ffd700;
-    margin-bottom: 15px;
-}
-
-label {
-    font-weight: bold;
-    color: #aaa;
-    display: block;
-    margin-bottom: 8px;
-}
-
-#transcript-box {
-    width: 100%;
-    height: 160px;
-    background-color: #141414;
-    color: #fff;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 16px;
-    line-height: 1.5;
-    overflow-y: auto;
-    box-sizing: border-box;
-}
-
-mark.highlight-trigger {
-    background-color: #ffee00;
-    color: #000;
-    font-weight: bold;
-    padding: 2px 4px;
-    border-radius: 3px;
-}
-
-#result, #empathy-result {
-    margin-top: 15px;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-#bsd-suggestion {
-    margin-top: 15px;
-    padding: 15px;
-    border: 1px dashed #ffeb3b;
-    border-radius: 8px;
-    background-color: #141814;
-    font-size: 18px;
-    font-weight: bold;
-    color: #00e676;
-    display: none;
-}
-
-#alerta {
-    margin-top: 15px;
-    font-size: 22px;
-    font-weight: bold;
-}
-
-.red { color: #ff4d4d; }
-.green { color: #4CAF50; }
-.yellow { color: #ffeb3b; }
-.gray { color: #aaa; margin-top: 10px; }
-
-#moder {
-    position: fixed;
-    bottom: 15px;
-    left: 20px;
-    font-size: 45px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    background: linear-gradient(180deg, #ffe066 0%, #d4af37 50%, #8a6d1c 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    user-select: none;
-    z-index: 9999;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MORA - Realtime Audio Monitor</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #1e1e1e; color: #fff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #2a2a2a; padding: 20px; border-radius: 8px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        button { padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; }
+        #btn-start { background-color: #00e676; color: #000; }
+        select { padding: 10px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
+        #status { font-weight: bold; margin-bottom: 15px; }
+        #transcript-box { background: #121212; padding: 15px; border-radius: 4px; height: 300px; overflow-y: auto; font-family: monospace; }
+    </style>
 </head>
 <body>
 
-<h2>M.O.R.A PROJECT</h2>
+<div class="container">
+    <h2>MORA - Realtime Audio Monitor</h2>
+    
+    <div class="controls">
+        <button id="btn-start" onclick="toggleMonitoring()">🟢 Start Monitoring</button>
+        <label for="lang-select">Idioma:</label>
+        <select id="lang-select" onchange="handleLanguageChange()">
+            <option value="en" selected>English</option>
+            <option value="es">Español</option>
+        </select>
+    </div>
 
-<div class="controls-container">
-    <button id="btn-start" onclick="toggleMonitoring()">🟢 Start Monitoring.</button>
-    <button id="btn-reset" onclick="resetTranscript()">🔄 Restart MORA</button>
-    <select id="lang-select" onchange="handleLanguageChange()">
-        <option value="en">🇺🇸 English</option>
-        <option value="es">🇲🇽 Español</option>
-    </select>
+    <div id="status">⏸️ Monitoreo pausado.</div>
+    <div id="transcript-box"></div>
 </div>
 
-<div id="status">⏸️ Monitoring paused.</div>
-
-<label>I am listening attentively.:</label>
-<div id="transcript-box"></div>
-
-<div id="result"></div>
-<div id="empathy-result"></div>
-<div id="bsd-suggestion"></div>
-<div id="alerta"></div>
-<div id="debug" class="gray"></div>
-
-<div id="moder">MODER</div>
-
 <script>
-var socket = null;
-var audioContext = null;
-var processorNode = null;
-var isListening = false;
-var rawTranscriptHistory = "";
+    var socket = null;
+    var audioContext = null;
+    var processorNode = null;
+    var isListening = false;
+    var rawTranscriptHistory = "";
 
-// Frases de apertura para activar auto-reset
-var openingPhrases = [
-    "my name is",
-    "how can i help you",
-    "how may i help you",
-    "how can i assist you",
-    "mi nombre es",
-    "en que le puedo ayudar",
-    "como le puedo ayudar",
-    "como le puedo asistir"
-];
-
-var glossary = [
-    "don't understand", "dont understand", "do not understand", "doesn't make sense", "doesnt make sense",
-    "cannot afford", "can't afford", "cant afford", "can't pay", "cant pay", "unable to pay",
-    "talking to my lawyer", "talk to my lawyer", "speaking with my attorney", "never received",
-    "no entiendo", "no le entiendo", "no entiendo nada", "no tiene sentido", "no puedo pagar",
-    "no me alcanza", "voy a hablar con mi abogado", "hablare con mi abogado", "nunca recibi",
-    "nunca me llego", "me estan robando", "son unos rateros", "es una estafa",
-    "angry","upset","frustrated","unhappy","disappointed","bad","terrible","unacceptable","wrong","incorrect",
-    "unable","again","several","late","increase","fee","credit","report","bureau","reported","complaint","cfpb",
-    "attorney","lawsuit","legal","supervisor","dissatisfaction","abuse","abusive","defraud","frb","mistreat",
-    "accuse","demand","ftc","negative","treated badly","agency","deplorable","furious","nightmare","transphobic",
-    "doi","harass","harassment","occ","tricked","annoy","disappoint","offended","udfi","appalled","discontent",
-    "hateful","pain","pain point","discriminate","discrimination","discriminatory","homophobic","poorly","unfair",
-    "attorney general","disgrace","horrible","predatory","awful","disgruntled","horrid","pressured","unlawful",
-    "bait","dishonest","inappropriate","racism","unreasonable","bbb","displease","incompetent","rebuttal","bigotry",
-    "disrespectful","regulation","regulator","regulatory","violate","violation","bogus","dissatisfied","inexcusable",
-    "ridiculous","break the law","disturb","irate","rude","worse","worst","dreadful","insults","scam","duped",
-    "lawyer","sec","cheat","egregious","letter of apology","sexist","closing account","fail","lie","lying","sucks",
-    "complain","falsely","litigate","litigation","sue","sued","suing","compromised","fine print","lost confidence",
-    "suit","cruel","finra","miserable","swear","curse words","deceive","deceptive","mislead","misleading","misled",
-    "targeted","targeting","damn","hell","crap","shoot","heck","dang","freaking","freakin","what the hell","goddamn",
-    "goddammit","dammit","oh my god","jesus christ","shit","bullshit","horseshit","batshit","shitshow","shithead",
-    "shitty","shitbag","shitface","no shit","holy shit","piss","pissed","pissed off","pissing","piss off","pisshead",
-    "ass","dumbass","smartass","jackass","badass","asshole","asshat","assbag","assclown","asswipe","bastard","lazy bastard",
-    "dirty bastard","bitch","bitchy","son of a bitch","dumb bitch","crazy bitch","screw","screwed","screw up","screw you",
-    "crappy","trash","garbage","this sucks","fuck","fucking","fucked","fuck up","fuck off","fuck you","fuck this","fuck that",
-    "fuck it","fuckface","fucker","motherfucker","dumbfuck","dick","dickhead","dickface","dickwad","prick","jerk","idiot",
-    "moron","stupid","stupid idiot","piece of shit","douche","douchebag","loser","clown","wtf","what the fuck",
-    "are you kidding me","what is this shit","son of a gun","pain in the ass","go to hell","shut up","shut the hell up",
-    "shut the fuck up","screw this","this is bullshit","this is crap","this is shit","this is ridiculous","this is insane",
-    "this is stupid","this is messed up","this is wrong","you messed up","you screwed me","you lied","you failed",
-    "you don't care","unbelievable","absurd","outrageous","annoying","infuriating","frustration","molesto","enojado",
-    "frustrado","insatisfecho","decepcionado","frustracion","malo","pesimo","incorrecto","reporte","buro","queja",
-    "reclamo","abogado","demanda","insatisfaccion","abuso","abusivo","defraudar","maltratar","acusar","exigir",
-    "tratado mal","pesadilla","transfobico","acosar","acoso","enganado","molestar","decepcionar","ofendido",
-    "indignado","descontento","odioso","dolor","punto de dolor","inaceptable","discriminar","discriminacion",
-    "discriminatorio","homofobico","mal","injusto","fiscal general","desgracia","depredador","infeliz","horrendo",
-    "disgustado","presionado","ilegal","asco","problema","poco profesional","anzuelo","deshonesto","inapropiado",
-    "racismo","irrazonable","disgustar","incompetente","refutacion","fanatismo","irrespetuoso","regulacion",
-    "regulador","regulatorio","violar","violacion","falso","inexcusable","ridiculo","violar la ley","perturbar",
-    "iracundo","grosero","peor","el peor","insultos","estafa","equivocado","hacer trampa","atroz","carta de disculpa",
-    "sexista","cerrar cuenta","fallar","mentir","mintiendo","apesta","quejarse","falsamente","litigar","litigio",
-    "denunciar","demandado","demandando","comprometido","letra pequena","perdida de confianza","cruel","miserable",
-    "groserias","palabras vulgares","enganar","enganoso","inducir a error","dirigido","dirigiendo","maldita sea",
-    "infierno","porqueria","carajo","diablos","rayos","maldito","que demonios","maldito dios","dios mio","jesucristo",
-    "mierda","mierda absoluta","locura","desaster","de mierda","basura de persona","cara de mierda","ni hablar",
-    "mierda santa","orinar","muy enojado","vete al diablo","trasero","sabelotodo","imbecil","malote","basura","payaso",
-    "bastardo","bastardo flojo","bastardo sucio","perra","odiosa","hijo de perra","perra estupida","perra loca","joder",
-    "jodido","arruinar","jodete","esto apesta","vete a la mierda","joder esto","joder eso","me importa una mierda",
-    "cara de idiota","cabron","hijo de puta","estupido","idiota estupido","pedazo de mierda","bolsa de imbecil",
-    "herramienta","perdedor","que carajos","me estas tomando el pelo","que es esta mierda","hijo de la gran",
-    "dolor en el trasero","vete al infierno","callate","callate al demonio","callate la mierda","a la mierda con esto",
-    "esto es mierda","esto es porqueria","esto es ridiculo","esto es una locura","esto es estupido","esto esta mal hecho",
-    "esto esta mal","la arruinaste","me arruinaste","mentiste","fallaste","no te importa","increible","indignante",
-    "frustrante","enojo","enfurecedor","violando","puta","puto",
-    "no me dejo", "no me deja", "no me permitio", "no me permite", "no me dio acceso", "no me deja entrar",
-    "no me dejo entrar", "no me deja ingresar", "no me dejo ingresar", "no me deja avanzar", "no me dejo avanzar",
-    "no me deja pagar", "no me dejo pagar", "no me deja hacer el pago", "no me dejo hacer el pago",
-    "no me deja procesar", "no me dejo procesar", "no me deja continuar", "no me dejo continuar",
-    "no me deja guardar", "no me dejo guardar", "no me deja enviar", "no me dejo enviar",
-    "no me deja cambiar", "no me dejo cambiar", "no me deja actualizar", "no me dejo actualizar",
-    "no me deja seleccionar", "no me dejo seleccionar", "no me deja iniciar sesion", "no me dejo iniciar sesion",
-    "no me deja hacer nada", "no me dejo hacer nada", "no me deja hacer la transaccion", "no me dejo hacer la transaccion",
-    "no me deja completar", "no me dejo completar", "el sistema no me deja", "el sistema no me dejo",
-    "la pagina no me deja", "la pagina no me dejo", "la aplicacion no me deja", "la app no me deja",
-    "la aplicacion no me dejo", "la app no me dejo", "el sitio no me deja", "el sitio no me dejo",
-    "no me lo permitio", "no me da opcion", "no me dio opcion", "no me da acceso", "no me dio acceso",
-    "no me reconoce la contraseña", "no me acepta la clave", "no me acepta la tarjeta", "no me acepta el pago",
-    "me saca del sistema", "me saco del sistema", "me rebota el pago", "me rebotó el pago",
-    "me marca error", "me marco error", "me da error", "me dio error", "me sale un error", "me salio un error",
-    "me aparece un error", "me aparecio un error", "me bloquea", "me bloqueo", "me tiene bloqueado",
-    "me rechaza la transaccion", "me rechazo el pago", "no me da acceso a la cuenta", "no me permite pagar",
-    "didn't let me", "does not let me", "doesn't let me", "won't let me", "wouldn't let me",
-    "didn't allow me", "does not allow me", "doesn't allow me", "won't allow me", "wouldn't allow me",
-    "didn't let me log in", "doesn't let me log in", "won't let me log in", "wouldn't let me log in",
-    "didn't let me sign in", "doesn't let me sign in", "won't let me sign in",
-    "didn't let me pay", "doesn't let me pay", "won't let me pay", "wouldn't let me pay",
-    "didn't let me make the payment", "doesn't let me make the payment", "won't let me make payment",
-    "didn't let me submit", "doesn't let me submit", "won't let me submit",
-    "didn't let me proceed", "doesn't let me proceed", "won't let me proceed",
-    "didn't let me continue", "doesn't let me continue", "won't let me continue",
-    "didn't let me complete", "doesn't let me complete", "won't let me complete",
-    "didn't let me update", "doesn't let me update", "won't let me update",
-    "didn't let me save", "doesn't let me save", "won't let me save",
-    "didn't let me select", "doesn't let me select", "won't let me select",
-    "didn't let me access", "doesn't let me access", "won't let me access",
-    "system didn't let me", "system won't let me", "system doesn't let me",
-    "website won't let me", "app won't let me", "page won't let me",
-    "it gives me an error", "it gave me an error", "it keeps giving me an error",
-    "it kicked me out", "it locked me out", "my account is locked", "i'm locked out"
-];
-
-var empathyPhrases = [
-    "i apologize for the inconvenience", "i am sorry for the frustration", "sorry for the inconvenience",
-    "apologize for the inconvenience", "sincerely apologize", "sorry for any confusion",
-    "apologize for the misunderstanding", "regret the inconvenience", "sorry for the delay",
-    "pido disculpas por los inconvenientes", "lamento mucho esta situacion", "disculpe la demora",
-    "gracias por su paciencia", "lamento cualquier confusion", "le ofrezco una disculpa",
-    "lamento la frustracion", "sinceras disculpas", "completely understand", "understand your concern",
-    "understand why you would feel frustrated", "see why this would be upsetting",
-    "understand the importance", "appreciate the opportunity", "entiendo completamente",
-    "comprendo por que", "reconozco la importancia", "sus preocupaciones son validas"
-];
-
-var empathyKeywords = [
-    "apologize", "apology", "apologise", "inconvenience", "inconvenient",
-    "frustration", "frustrated", "disculpas", "disculpe", "disculpa", "lamento", "lamentamos",
-    "inconvenientes", "inconveniente", "frustracion", "entiendo", "comprendo"
-];
-
-var bsdRules = [
-    { code: "BSDFRD", label: "Fraud", keywords: ["fraud", "identity theft", "stolen", "scam", "fraude", "robo de identidad", "usurpacion", "unauthorized", "suspicious activity", "compromised", "phishing", "fake", "forged", "unauthorized charge", "fraudulent"] },
-    { code: "BSDBNK", label: "Bankruptcy Issue Resolved", keywords: ["bankrupt", "bankruptcy", "chapter 7", "chapter 13", "bancarrota", "quiebra", "discharge", "automatic stay"] },
-    { code: "BSDFOR", label: "Foreclosure Issue Resolved", keywords: ["foreclosure", "sheriff sale", "seizure", "ejecucion hipotecaria", "embargo", "auction date", "foreclosure attorney"] },
-    { code: "BSDCBR", label: "Credit Report Issue Resolved", keywords: ["credit report", "credit bureau", "equifax", "experian", "transunion", "reporte de credito", "buro de credito", "late payment reported", "credit score dropped"] },
-    { code: "BSDACH", label: "ACH Issue Resolved", keywords: ["ach", "direct debit", "auto pay", "automatic payment", "debito automatico", "retiro automatico", "pago automatico", "autopay failed", "double debit"] },
-    { code: "BSDFEE", label: "Fee Issue Resolved", keywords: ["fee", "late fee", "charge", "penalty", "cargo", "tarifa", "comision", "multa", "cobro indebido", "waive fee"] },
-    { code: "BSDTAX", label: "Taxes Issues Resolved", keywords: ["tax", "taxes", "property tax", "1098", "impuesto", "impuestos", "contribuciones"] },
-    { code: "BSDINS", label: "Insurance Issue Resolved", keywords: ["insurance", "hazard insurance", "flood insurance", "policy", "seguro", "poliza", "aseguradora"] },
-    { code: "BSDESC", label: "Escrow Issue Resolved", keywords: ["escrow", "escrow account", "escrow shortage", "caja de ahorro", "escrow surplus", "escrow analysis"] },
-    { code: "BSDLOS", label: "Loss Mitigation Issue Resolved", keywords: ["loss mitigation", "loan modification", "forbearance", "workout plan", "modificacion de prestamo", "mitigacion de perdida"] },
-    { code: "BSDMIP", label: "MIP/PMI Issue Resolved", keywords: ["pmi", "mip", "private mortgage insurance", "seguro hipotecario privado", "pmi removal", "cancel pmi"] },
-    { code: "BSDPAY", label: "Payment Issue Resolved", keywords: ["payment", "check", "posting", "afford", "can't pay", "cant pay", "pago", "cheque", "no puedo pagar", "no me alcanza"] },
-    { code: "BSDPOF", label: "Payoff Issue Resolved", keywords: ["payoff", "pay off", "payoff quote", "liquidar", "monto de liquidacion", "saldar cuenta"] },
-    { code: "BSDPFS", label: "PIF Satis. Issue Resolved", keywords: ["paid in full", "satisfaction letter", "pif", "pagado por completo", "satisfaccion de hipoteca"] },
-    { code: "BSDACM", label: "Account Maintenance Issue Resolved", keywords: ["address change", "name change", "mailing address", "account info", "actualizacion de datos", "cambio de direccion"] },
-    { code: "BSDDEF", label: "Default Issue Resolved", keywords: ["default", "delinquent", "behind on payments", "mora", "atraso", "incumplimiento", "past due"] },
-    { code: "BSDDIS", label: "Natural Disaster Issue Resolved", keywords: ["disaster", "hurricane", "storm", "flood", "wildfire", "desastre natural", "huracan", "tormenta"] },
-    { code: "BSDEMC", label: "Email/Chat Service Issue Resolved", keywords: ["email", "chat", "message", "correo", "mensaje", "secure message", "webchat"] },
-    { code: "BSDPHN", label: "Phone Service Issue Resolved", keywords: ["phone", "call", "hold time", "hung up", "representative", "telefono", "llamada", "tiempo de espera"] },
-    { code: "BSDWEB", label: "Web Issue Resolved", keywords: ["website", "online portal", "login", "password reset", "pagina web", "sitio web", "clave", "iniciar sesion"] },
-    { code: "BSDYED", label: "Year-End Issue Resolved", keywords: ["year end", "year-end", "annual statement", "1098 statement", "fin de ano"] },
-    { code: "BSDDBI", label: "Deceased Borrower Process", keywords: ["deceased", "passed away", "died", "fallecido", "defuncion", "muerto"] },
-    { code: "BSDSII", label: "Successor in Interest", keywords: ["successor", "sii", "heir", "heredero", "sucesor", "successor in interest"] },
-    { code: "BSDHEL", label: "HELOC", keywords: ["heloc", "line of credit", "linea de credito", "home equity"] }
-];
-
-function normalize(text) {
-    if (!text) return "";
-    return text.toLowerCase()
-        .replace(/[áàä]/g, "a")
-        .replace(/[éèë]/g, "e")
-        .replace(/[íìï]/g, "i")
-        .replace(/[óòö]/g, "o")
-        .replace(/[úùü]/g, "u")
-        .replace(/ñ/g, "n")
-        .replace(/['’]/g, "'")
-        .replace(/[^a-z0-9' ]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-}
-
-function maskSensitiveData(text) {
-    if (!text) return "";
-    return text
-        .replace(/\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g, '***-**-****')
-        .replace(/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{1,7}\b/g, '****-****-****-****')
-        .replace(/(\$|usd\s?)\d+(?:,\d{3})*(?:\.\d{1,2})?/gi, '***')
-        .replace(/(?:\+?1[-\s]?)?\(?\d{3}\)?[-\s]?\d{3}[-\s]?\d{4}/g, '***-***-****')
-        .replace(/\b\d{4,}\b/g, '****')
-        .replace(/\b\d{1,3}\b/g, '*')
-        .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|dollar|dollars|cent|cents)\b/gi, '*')
-        .replace(/\b(cero|uno|una|unos|unas|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|diecisiete|dieciocho|diecinueve|veinte|veintiuno|veintidos|veintidós|veintitres|veintitrés|veinticinco|veintiseis|veintisiete|veintiocho|veintinueve|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa|ciento|cientos|cien|quinientos|seiscientos|setecientos|ochocientos|novecientos|mil|millon|millones|dolar|dolares|centavo|centavos)\b/gi, '*');
-}
-
-function checkOpeningPhrase(textNormalized) {
-    for (var i = 0; i < openingPhrases.length; i++) {
-        if (textNormalized.indexOf(openingPhrases[i]) !== -1) {
-            return true;
-        }
+    function normalize(text) {
+        return text.toLowerCase().trim();
     }
-    return false;
-}
 
-function checkEmpathy(textNormalized) {
-    for (var i = 0; i < empathyPhrases.length; i++) {
-        var termNorm = normalize(empathyPhrases[i]);
-        if (textNormalized.indexOf(termNorm) !== -1) return empathyPhrases[i];
+    function checkOpeningPhrase(text) {
+        var englishPhrases = ["thank you for calling", "thanks for calling", "my name is"];
+        var spanishPhrases = ["gracias por llamar", "mi nombre es", "bienvenido a"];
+        var allPhrases = englishPhrases.concat(spanishPhrases);
+        return allPhrases.some(phrase => text.includes(phrase));
     }
-    var found = [];
-    for (var k = 0; k < empathyKeywords.length; k++) {
-        var keyNorm = normalize(empathyKeywords[k]);
-        if (textNormalized.indexOf(keyNorm) !== -1) found.push(empathyKeywords[k]);
+
+    function resetTranscript() {
+        rawTranscriptHistory = "";
+        document.getElementById("transcript-box").innerHTML = "";
     }
-    return found.length >= 1 ? found.join(", ") : "";
-}
 
-function getBSDSuggestion(textNormalized) {
-    var bestMatch = null;
-    var maxScore = 0;
-
-    for (var i = 0; i < bsdRules.length; i++) {
-        var ruleScore = 0;
-        var matchedKeys = [];
-
-        for (var k = 0; k < bsdRules[i].keywords.length; k++) {
-            var ruleKeyNorm = normalize(bsdRules[i].keywords[k]);
-            if (textNormalized.indexOf(ruleKeyNorm) !== -1) {
-                ruleScore++;
-                matchedKeys.push(bsdRules[i].keywords[k]);
-            }
-        }
-
-        if (ruleScore > maxScore) {
-            maxScore = ruleScore;
-            bestMatch = { rule: bsdRules[i], matchedKeys: matchedKeys };
+    function handleLanguageChange() {
+        if (isListening) {
+            stopMonitoring();
+            startMonitoring();
         }
     }
 
-    if (bestMatch && maxScore > 0) {
-        return "<strong>" + bestMatch.rule.code + "</strong> — Borrower States Dissatisfaction - " + bestMatch.rule.label + 
-               "<br><small style='color:#aaa;'>Match detected by: [" + bestMatch.matchedKeys.join(", ") + "]</small>";
-    }
-
-    return "<strong>BSDPAY</strong> — Borrower States Dissatisfaction - Payment Issue Resolved (Suggested by default)";
-}
-
-async function handleLanguageChange() {
-    if (isListening) {
-        stopMonitoring();
-        await startMonitoring();
-    }
-}
-
-function analyzeRealtime(text) {
-    var maskedText = maskSensitiveData(text);
-    var textNormalized = normalize(maskedText);
-    var score = 0;
-    var foundComplaints = [];
-
-    for (var i = 0; i < glossary.length; i++) {
-        var termNorm = normalize(glossary[i]);
-        if (termNorm.indexOf(" ") !== -1) {
-            if (textNormalized.indexOf(termNorm) !== -1) {
-                score++;
-                foundComplaints.push(glossary[i]);
-            }
+    function toggleMonitoring() {
+        if (isListening) {
+            stopMonitoring();
         } else {
-            var words = textNormalized.split(" ");
-            for (var j = 0; j < words.length; j++) {
-                if (words[j] === termNorm) {
-                    if (words[j - 1] === "not" || words[j - 1] === "no") continue;
-                    score++;
-                    foundComplaints.push(glossary[i]);
-                    break;
-                }
+            startMonitoring();
+        }
+    }
+
+    function convertFloat32ToInt16(buffer) {
+        let l = buffer.length;
+        let buf = new Int16Array(l);
+        while (l--) {
+            let s = Math.max(-1, Math.min(1, buffer[l]));
+            buf[l] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        return buf.buffer;
+    }
+
+    function analyzeRealtime(history) {
+        document.getElementById("transcript-box").innerHTML = history;
+        var box = document.getElementById("transcript-box");
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function startMonitoring() {
+        var btn = document.getElementById("btn-start");
+        var status = document.getElementById("status");
+        var selectedLang = document.getElementById("lang-select").value;
+
+        try {
+            status.innerText = "⏳ 1/2: Selecciona pantalla/pestaña y activa 'Compartir audio del sistema'...";
+            status.style.color = "#ffd700";
+
+            const systemStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            });
+
+            const systemAudioTrack = systemStream.getAudioTracks()[0];
+            if (!systemAudioTrack) {
+                alert("⚠️ Importante: Debes marcar la casilla 'Compartir audio del sistema'.");
+                systemStream.getTracks().forEach(t => t.stop());
+                status.innerText = "⏸️ Monitoreo pausado.";
+                return;
             }
-        }
-    }
 
-    var detectedEmpathy = checkEmpathy(textNormalized);
-    
-    var highlightedText = maskedText;
-    var allTriggersToHighlight = foundComplaints.concat(
-        detectedEmpathy ? detectedEmpathy.split(", ") : []
-    );
+            status.innerText = "⏳ 2/2: Solicitando acceso al micrófono...";
 
-    allTriggersToHighlight.sort((a, b) => b.length - a.length);
+            const micStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            });
 
-    allTriggersToHighlight.forEach(function(trigger) {
-        if (trigger.trim() !== "") {
-            var regex = new RegExp("(" + trigger.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ")", "gi");
-            highlightedText = highlightedText.replace(regex, '<mark class="highlight-trigger">$1</mark>');
-        }
-    });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-    var box = document.getElementById("transcript-box");
-    box.innerHTML = highlightedText;
-    box.scrollTop = box.scrollHeight;
+            const merger = audioContext.createChannelMerger(2);
+            const micSource = audioContext.createMediaStreamSource(micStream);
+            const systemSource = audioContext.createMediaStreamSource(systemStream);
 
-    var result = document.getElementById("result");
-    var empathyResult = document.getElementById("empathy-result");
-    var bsdBox = document.getElementById("bsd-suggestion");
-    var debug = document.getElementById("debug");
-    var alerta = document.getElementById("alerta");
+            micSource.connect(merger, 0, 0);       // Canal 0: Agente
+            systemSource.connect(merger, 0, 1);    // Canal 1: Cliente
 
-    if (score >= 1) {
-        result.innerHTML = "❌ POTENTIAL COMPLAINT DETECTED (Score: " + score + ")";
-        result.className = "red";
-        alerta.innerHTML = "Please document your complaint in detail. For BSD Code questions, refer to Ref #4088";
-        alerta.className = "red";
-        
-        var suggestedCode = getBSDSuggestion(textNormalized);
-        bsdBox.innerHTML = "📌 Suggested BSD code: <br>" + suggestedCode;
-        bsdBox.style.display = "block";
-    } else if (detectedEmpathy !== "") {
-        result.innerHTML = "⚠️ Evaluating Agent Response";
-        result.className = "yellow";
-        empathyResult.innerHTML = "Based on your response, this could potentially be considered a complaint.";
-        empathyResult.className = "yellow";
-        
-        var suggestedCode = getBSDSuggestion(textNormalized);
-        bsdBox.innerHTML = "📌 Suggested BSD code: <br>" + suggestedCode;
-        bsdBox.style.display = "block";
-        alerta.innerHTML = "";
-    } else {
-        result.innerHTML = "✅ NO COMPLAINT DETECTED";
-        result.className = "green";
-        alerta.innerHTML = "";
-        empathyResult.innerHTML = "";
-        bsdBox.style.display = "none";
-    }
+            // Se envía la IP local junto al parámetro de idioma seleccionado (?language=es o ?language=en)
+            var wsUrl = "ws://10.80.66.56:8080?language=" + selectedLang;
+            socket = new WebSocket(wsUrl);
 
-    debug.innerHTML = "Triggers: " + (detectedEmpathy ? "Empathy: [" + detectedEmpathy + "]" : (foundComplaints.join(", ") || "None"));
-}
+            socket.onopen = function() {
+                status.innerText = "🟢 Monitoreo Activo (" + selectedLang.toUpperCase() + ")...";
+                status.style.color = "#00e676";
+                btn.innerText = "🔴 Detener Monitoreo";
+                isListening = true;
 
-function resetTranscript() {
-    rawTranscriptHistory = "";
-    document.getElementById("transcript-box").innerHTML = "";
-    document.getElementById("result").innerHTML = "";
-    document.getElementById("empathy-result").innerHTML = "";
-    document.getElementById("bsd-suggestion").style.display = "none";
-    document.getElementById("bsd-suggestion").innerHTML = "";
-    document.getElementById("alerta").innerHTML = "";
-    document.getElementById("debug").innerHTML = "";
-}
+                processorNode = audioContext.createScriptProcessor(4096, 2, 2);
+                merger.connect(processorNode);
+                processorNode.connect(audioContext.destination);
 
-function toggleMonitoring() {
-    if (isListening) {
-        stopMonitoring();
-    } else {
-        startMonitoring();
-    }
-}
+                processorNode.onaudioprocess = function(e) {
+                    if (!isListening || socket.readyState !== 1) return;
 
-function convertFloat32ToInt16(buffer) {
-    let l = buffer.length;
-    let buf = new Int16Array(l);
-    while (l--) {
-        let s = Math.max(-1, Math.min(1, buffer[l]));
-        buf[l] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-    return buf.buffer;
-}
+                    const left = e.inputBuffer.getChannelData(0);
+                    const right = e.inputBuffer.getChannelData(1);
 
-async function startMonitoring() {
-    var btn = document.getElementById("btn-start");
-    var status = document.getElementById("status");
-
-    try {
-        status.innerText = "⏳ 1/2: Select screen/tab and enable 'Share system audio'...";
-        status.style.color = "#ffd700";
-
-        const systemStream = await navigator.mediaDevices.getDisplayMedia({
-            video: true,
-            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-        });
-
-        const systemAudioTrack = systemStream.getAudioTracks()[0];
-        if (!systemAudioTrack) {
-            alert("⚠️ Important: You must check 'Share system audio' in the popup window.");
-            systemStream.getTracks().forEach(t => t.stop());
-            status.innerText = "⏸️ Monitoring paused.";
-            return;
-        }
-
-        status.innerText = "⏳ 2/2: Requesting microphone access (Agent)...";
-
-        const micStream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-        });
-
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-        const merger = audioContext.createChannelMerger(2);
-        const micSource = audioContext.createMediaStreamSource(micStream);
-        const systemSource = audioContext.createMediaStreamSource(systemStream);
-
-        micSource.connect(merger, 0, 0);       // Canal 0: Agente
-        systemSource.connect(merger, 0, 1);    // Canal 1: Cliente
-
-        // CONEXIÓN AL PROXY EN TU LAPTOP SERVIDORA (10.80.66.56:8080)
-        var wsUrl = "ws://10.80.66.56:8080";
-        socket = new WebSocket(wsUrl);
-
-        socket.onopen = function() {
-            status.innerText = "🟢 Active Monitoring...";
-            status.style.color = "#00e676";
-            btn.innerText = "🔴 Stop Monitoring";
-            isListening = true;
-
-            processorNode = audioContext.createScriptProcessor(4096, 2, 2);
-            merger.connect(processorNode);
-            processorNode.connect(audioContext.destination);
-
-            processorNode.onaudioprocess = function(e) {
-                if (!isListening || socket.readyState !== 1) return;
-
-                const left = e.inputBuffer.getChannelData(0);
-                const right = e.inputBuffer.getChannelData(1);
-
-                const interleaved = new Float32Array(left.length + right.length);
-                for (let i = 0; i < left.length; i++) {
-                    interleaved[i * 2] = left[i];
-                    interleaved[i * 2 + 1] = right[i];
-                }
-
-                const pcmBuffer = convertFloat32ToInt16(interleaved);
-                socket.send(pcmBuffer);
-            };
-        };
-
-        socket.onmessage = function(msg) {
-            var data = JSON.parse(msg.data);
-            if (data.channel && data.channel.alternatives && data.channel.alternatives[0]) {
-                var transcript = data.channel.alternatives[0].transcript;
-                if (transcript && transcript.trim().length > 0) {
-                    var channelIdx = (data.channel_index && data.channel_index.length > 0) ? data.channel_index[0] : 0;
-                    var speaker = (channelIdx === 0) ? "Agent" : "Borrower";
-                    
-                    var normFragment = normalize(transcript);
-
-                    if (speaker === "Agent" && checkOpeningPhrase(normFragment)) {
-                        resetTranscript();
+                    const interleaved = new Float32Array(left.length + right.length);
+                    for (let i = 0; i < left.length; i++) {
+                        interleaved[i * 2] = left[i];
+                        interleaved[i * 2 + 1] = right[i];
                     }
 
-                    rawTranscriptHistory += "[" + speaker + "]: " + transcript + "<br>";
-                    analyzeRealtime(rawTranscriptHistory);
+                    const pcmBuffer = convertFloat32ToInt16(interleaved);
+                    socket.send(pcmBuffer);
+                };
+            };
+
+            socket.onmessage = function(msg) {
+                var data = JSON.parse(msg.data);
+                if (data.channel && data.channel.alternatives && data.channel.alternatives[0]) {
+                    var transcript = data.channel.alternatives[0].transcript;
+                    if (transcript && transcript.trim().length > 0) {
+                        var channelIdx = (data.channel_index && data.channel_index.length > 0) ? data.channel_index[0] : 0;
+                        var speaker = (channelIdx === 0) ? "Agent" : "Borrower";
+                        
+                        var normFragment = normalize(transcript);
+
+                        if (speaker === "Agent" && checkOpeningPhrase(normFragment)) {
+                            resetTranscript();
+                        }
+
+                        rawTranscriptHistory += "[" + speaker + "]: " + transcript + "<br>";
+                        analyzeRealtime(rawTranscriptHistory);
+                    }
                 }
-            }
-        };
+            };
 
-        socket.onerror = function(err) {
-            console.error("WebSocket Error:", err);
-            stopMonitoring();
-        };
+            socket.onerror = function(err) {
+                console.error("Error en WebSocket:", err);
+                stopMonitoring();
+            };
 
-        socket.onclose = function() {
-            if (isListening) stopMonitoring();
-        };
+            socket.onclose = function() {
+                if (isListening) stopMonitoring();
+            };
 
-    } catch (err) {
-        console.error("Error starting monitoring:", err);
-        status.innerText = "❌ Error accessing audio source.";
-        status.style.color = "#ff4d4d";
+        } catch (err) {
+            console.error("Error al iniciar monitoreo:", err);
+            status.innerText = "❌ Error al acceder a las fuentes de audio.";
+            status.style.color = "#ff4d4d";
+            isListening = false;
+        }
+    }
+
+    function stopMonitoring() {
         isListening = false;
+        if (processorNode) {
+            processorNode.disconnect();
+            processorNode = null;
+        }
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+        if (socket) {
+            socket.close();
+            socket = null;
+        }
+        var btn = document.getElementById("btn-start");
+        var status = document.getElementById("status");
+        btn.innerText = "🟢 Start Monitoring";
+        status.innerText = "⏸️ Monitoreo pausado.";
+        status.style.color = "#fff";
     }
-}
-
-function stopMonitoring() {
-    var btn = document.getElementById("btn-start");
-    var status = document.getElementById("status");
-
-    if (processorNode) {
-        processorNode.disconnect();
-        processorNode = null;
-    }
-    if (socket && socket.readyState === 1) {
-        socket.close();
-    }
-    if (audioContext) {
-        audioContext.close();
-    }
-
-    isListening = false;
-    status.innerText = "⏸️ Monitoring paused.";
-    status.style.color = "#ffd700";
-    btn.innerText = "🟢 Start Monitoring.";
-}
 </script>
+
 </body>
 </html>
