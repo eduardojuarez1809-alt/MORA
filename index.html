@@ -178,8 +178,6 @@ mark.highlight-trigger {
 <div id="moder">MODER</div>
 
 <script>
-const DEEPGRAM_API_KEY = "6ac125a3e51eb51126c7636b1f1477b4480b068b"; 
-
 var socket = null;
 var audioContext = null;
 var processorNode = null;
@@ -523,7 +521,6 @@ function toggleMonitoring() {
     }
 }
 
-// Convertidor de Audio a PCM Linear16 de 16-bit
 function convertFloat32ToInt16(buffer) {
     let l = buffer.length;
     let buf = new Int16Array(l);
@@ -537,7 +534,6 @@ function convertFloat32ToInt16(buffer) {
 async function startMonitoring() {
     var btn = document.getElementById("btn-start");
     var status = document.getElementById("status");
-    var selectedLang = document.getElementById("lang-select").value;
 
     try {
         status.innerText = "⏳ 1/2: Select screen/tab and enable 'Share system audio'...";
@@ -563,7 +559,6 @@ async function startMonitoring() {
         });
 
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const sampleRate = audioContext.sampleRate;
 
         const merger = audioContext.createChannelMerger(2);
         const micSource = audioContext.createMediaStreamSource(micStream);
@@ -572,10 +567,9 @@ async function startMonitoring() {
         micSource.connect(merger, 0, 0);       // Canal 0: Agente
         systemSource.connect(merger, 0, 1);    // Canal 1: Cliente
 
-        var langCode = (selectedLang === "es") ? "es" : "en-US";
-        var wsUrl = "wss://api.deepgram.com/v1/listen?encoding=linear16&sample_rate=" + sampleRate + "&channels=2&multichannel=true&language=" + langCode + "&model=nova-2";
-
-        socket = new WebSocket(wsUrl, ["token", DEEPGRAM_API_KEY]);
+        // CONEXIÓN AL PROXY LOCAL
+        var wsUrl = "ws://localhost:8080";
+        socket = new WebSocket(wsUrl);
 
         socket.onopen = function() {
             status.innerText = "🟢 Active Monitoring...";
@@ -583,7 +577,6 @@ async function startMonitoring() {
             btn.innerText = "🔴 Stop Monitoring";
             isListening = true;
 
-            // Procesador en tiempo real para convertir muestras a PCM
             processorNode = audioContext.createScriptProcessor(4096, 2, 2);
             merger.connect(processorNode);
             processorNode.connect(audioContext.destination);
@@ -594,7 +587,6 @@ async function startMonitoring() {
                 const left = e.inputBuffer.getChannelData(0);
                 const right = e.inputBuffer.getChannelData(1);
 
-                // Intercalar canales estéreo (Canal 0 Agente, Canal 1 Cliente)
                 const interleaved = new Float32Array(left.length + right.length);
                 for (let i = 0; i < left.length; i++) {
                     interleaved[i * 2] = left[i];
@@ -616,7 +608,6 @@ async function startMonitoring() {
                     
                     var normFragment = normalize(transcript);
 
-                    // Auto-reset si el Agente dice una frase de opening
                     if (speaker === "Agent" && checkOpeningPhrase(normFragment)) {
                         resetTranscript();
                     }
