@@ -178,8 +178,6 @@ mark.highlight-trigger {
 <div id="moder">MODER</div>
 
 <script>
-const DEEPGRAM_API_KEY = "6ac125a3e51eb51126c7636b1f1477b4480b068b";
-
 var socket = null;
 var audioContext = null;
 var processorNode = null;
@@ -565,9 +563,15 @@ async function startMonitoring() {
         systemSource.connect(merger, 0, 1);    // Canal 1: Cliente
 
         var langCode = (selectedLang === "es") ? "es" : "en-US";
-        var wsUrl = "wss://api.deepgram.com/v1/listen?encoding=linear16&sample_rate=" + sampleRate + "&channels=2&multichannel=true&language=" + langCode + "&model=nova-2";
+        
+        // --- CONEXIÓN CONFIGURADA CON IP Y PUERTO 8080 PARA PROXY MORA ---
+        var host = "10.80.66.56:8080";
+        var isSecure = window.location.protocol === "https:";
+        var wsProtocol = isSecure ? "wss://" : "ws://";
+        
+        var wsUrl = wsProtocol + host + "?lang=" + langCode + "&sample_rate=" + sampleRate;
 
-        socket = new WebSocket(wsUrl, ["token", DEEPGRAM_API_KEY]);
+        socket = new WebSocket(wsUrl);
 
         socket.onopen = function() {
             status.innerText = "🟢 Active Monitoring...";
