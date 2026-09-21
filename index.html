@@ -564,12 +564,9 @@ async function startMonitoring() {
 
         var langCode = (selectedLang === "es") ? "es" : "en-US";
         
-        // --- CONEXIÓN CONFIGURADA CON IP Y PUERTO 8080 PARA PROXY MORA ---
+        // --- FORZADO A PROTOCOLO WS NO CIFRADO PARA EVITAR ERR_SSL_PROTOCOL_ERROR ---
         var host = "10.80.66.56:8080";
-        var isSecure = window.location.protocol === "https:";
-        var wsProtocol = isSecure ? "wss://" : "ws://";
-        
-        var wsUrl = wsProtocol + host + "?lang=" + langCode + "&sample_rate=" + sampleRate;
+        var wsUrl = "ws://" + host + "?lang=" + langCode + "&sample_rate=" + sampleRate;
 
         socket = new WebSocket(wsUrl);
 
