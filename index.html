@@ -234,7 +234,7 @@ var glossary = [
     "denunciar","demandado","demandando","comprometido","letra pequena","perdida de confianza","cruel","miserable",
     "groserias","palabras vulgares","enganar","enganoso","inducir a error","dirigido","dirigiendo","maldita sea",
     "infierno","porqueria","carajo","diablos","rayos","maldito","que demonios","maldito dios","dios mio","jesucristo",
-    "mierda","mierda absoluta","locura","desaster","de mierda","basura de persona","cara de mierda","ni hablar",
+    "mierda","mierda absoluta","locura","desastre","de mierda","basura de persona","cara de mierda","ni hablar",
     "mierda santa","orinar","muy enojado","vete al diablo","trasero","sabelotodo","imbecil","malote","basura","payaso",
     "bastardo","bastardo flojo","bastardo sucio","perra","odiosa","hijo de perra","perra estupida","perra loca","joder",
     "jodido","arruinar","jodete","esto apesta","vete a la mierda","joder esto","joder eso","me importa una mierda",
@@ -256,8 +256,8 @@ var glossary = [
     "la pagina no me deja", "la pagina no me dejo", "la aplicacion no me deja", "la app no me deja",
     "la aplicacion no me dejo", "la app no me dejo", "el sitio no me deja", "el sitio no me dejo",
     "no me lo permitio", "no me da opcion", "no me dio opcion", "no me da acceso", "no me dio acceso",
-    "no me reconoce la contraseña", "no me acepta la clave", "no me acepta la tarjeta", "no me acepta el pago",
-    "me saca del sistema", "me saco del sistema", "me rebota el pago", "me rebotó el pago",
+    "no me reconoce la contrasena", "no me acepta la clave", "no me acepta la tarjeta", "no me acepta el pago",
+    "me saca del sistema", "me saco del sistema", "me rebota el pago", "me reboto el pago",
     "me marca error", "me marco error", "me da error", "me dio error", "me sale un error", "me salio un error",
     "me aparece un error", "me aparecio un error", "me bloquea", "me bloqueo", "me tiene bloqueado",
     "me rechaza la transaccion", "me rechazo el pago", "no me da acceso a la cuenta", "no me permite pagar",
@@ -562,9 +562,9 @@ async function startMonitoring() {
         micSource.connect(merger, 0, 0);       // Canal 0: Agente
         systemSource.connect(merger, 0, 1);    // Canal 1: Cliente
 
-        var langCode = (selectedLang === "es") ? "es" : "en-US";
+        // --- CORRECCIÓN DE CÓDIGO DE IDIOMA PARA EL MOTOR STT ---
+        var langCode = (selectedLang === "es") ? "es-MX" : "en-US";
         
-        // --- FORZADO A PROTOCOLO WS NO CIFRADO PARA EVITAR ERR_SSL_PROTOCOL_ERROR ---
         var host = "10.80.66.56:8080";
         var wsUrl = "ws://" + host + "?lang=" + langCode + "&sample_rate=" + sampleRate;
 
