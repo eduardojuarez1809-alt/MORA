@@ -1,58 +1,57 @@
+const express = require('express');
+const http = require('http');
 const WebSocket = require('ws');
 
-// Render asigna el puerto dinámicamente mediante process.env.PORT
-const PORT = process.env.PORT || 8080;
-const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY || "6ac125a3e51eb51126c7636b1f1477b4480b068b";
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-const wss = new WebSocket.Server({ port: PORT }, () => {
-    console.log('================================================');
-    console.log(`  Servidor Proxy de MORA listo en el puerto ${PORT}`);
-    console.log('================================================');
-});
+// Lee la API key guardada en las variables de entorno de Render
+const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
-wss.on('connection', (agentSocket, req) => {
-    console.log('[+] Un agente se ha conectado.');
+wss.on('connection', (ws, req) => {
+    // Extrae parámetros de la URL
+    const urlParams = new URLSearchParams(req.url.split('?')[1]);
+    const lang = urlParams.get('lang') || 'en';
+    const sampleRate = urlParams.get('sample_rate') || '48000';
 
-    const requestUrl = new URL(req.url, `http://${req.headers.host}`);
-    const rawLang = requestUrl.searchParams.get('lang') || requestUrl.searchParams.get('language') || 'en';
-    const sampleRate = requestUrl.searchParams.get('sample_rate') || '48000';
+    if (!DEEPGRAM_API_KEY) {
+        console.error("ERROR: No se ha configurado DEEPGRAM_API_KEY en las variables de entorno.");
+        ws.close();
+        return;
+    }
 
-    const selectedLang = rawLang.toLowerCase().includes('es') ? 'es-419' : 'en';
-
-    console.log(`[🌐] Configurando Deepgram con idioma: [${selectedLang.toUpperCase()}]`);
-
-    const deepgramUrl = `wss://api.deepgram.com/v1/listen?encoding=linear16&sample_rate=${sampleRate}&channels=2&multichannel=true&model=nova-2&language=${selectedLang}`;
-
-    const deepgramSocket = new WebSocket(deepgramUrl, {
+    // Conexión segura hacia Deepgram desde el servidor
+    const deepgramUrl = `wss://api.deepgram.com/v1/listen?encoding=linear16&sample_rate=${sampleRate}&channels=2&multichannel=true&language=${lang}&model=nova-2`;
+    
+    const deepgramWs = new WebSocket(deepgramUrl, {
         headers: {
             Authorization: `Token ${DEEPGRAM_API_KEY}`
         }
     });
 
-    deepgramSocket.on('open', () => {
-        console.log(`[✔] Conexión exitosa con Deepgram en [${selectedLang.toUpperCase()}].`);
+    deepgramWs.on('open', () => {
+        console.log('Conectado exitosamente a Deepgram');
     });
 
-    agentSocket.on('message', (data) => {
-        if (deepgramSocket.readyState === WebSocket.OPEN) {
-            deepgramSocket.send(data);
+    ws.on('message', (message) => {
+        if (deepgramWs.readyState === WebSocket.OPEN) {
+            deepgramWs.send(message);
         }
     });
 
-    deepgramSocket.on('message', (data) => {
-        if (agentSocket.readyState === WebSocket.OPEN) {
-            agentSocket.send(data.toString());
+    deepgramWs.on('message', (data) => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(data.toString());
         }
     });
 
-    agentSocket.on('close', () => {
-        console.log('[-] El agente cerró MORA o detuvo el monitoreo.');
-        if (deepgramSocket.readyState === WebSocket.OPEN) {
-            deepgramSocket.close();
-        }
-    });
+    ws.on('close', () => deepgramWs.close());
+    deepgramWs.on('close', () => ws.close());
+    deepgramWs.on('error', (err) => console.error('Error en Deepgram WS:', err));
+});
 
-    deepgramSocket.on('error', (err) => {
-        console.error('[!] Error en la conexión con Deepgram:', err.message);
-    });
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
