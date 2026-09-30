@@ -1,17 +1,13 @@
 {
   "name": "mora-proxy",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Proxy WebSocket para Deepgram",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "dotenv": "^17.4.2",
-    "ws": "^8.21.3"
+    "express": "^4.19.2",
+    "ws": "^8.16.0"
   }
 }
